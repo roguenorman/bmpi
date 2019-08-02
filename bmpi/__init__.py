@@ -23,7 +23,10 @@ def create_app(test_config=None):
     except OSError:
         pass
 
-    from .views.index import index_blueprint
-    app.register_blueprint(index_blueprint)
+    from .views.index import index_bp
+    from .views.terminal import terminal_bp
+
+    app.register_blueprint(index_bp)
+    app.register_blueprint(terminal_bp)
 
     return app
