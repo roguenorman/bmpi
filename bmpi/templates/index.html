@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+{% block head %}
+
+{{ super() }}
+{% endblock %}
+{% block content %}
+    <h1>Hi, {{ user.username }}!</h1>
+    <form method="post" action="/index">
+        <input type="submit" name="Reset" value="Reset">
+        <input type="submit" name="Start" value="Start">
+        <input type="submit" name="recipe" value="recipe">
+        <input type="submit" name="bm.txt" value="bm.txt">
+        <input type="submit" name="bm.html" value="bm.html">
+        <input type="submit" name="ui.txt" value="ui.txt">
+        <input type="submit" name="index" value="index">
+        <input type="submit" name="key1" value="key1">
+    </form>
+{% endblock %}

@@ -1,11 +1,15 @@
 import os
+import threading
+from flask import Flask, g
+from queue import Queue
+from werkzeug.serving import is_running_from_reloader
 
-from flask import Flask
+input_queue = Queue()
+output_queue = Queue()
 
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
-    #app.register_blueprint(index_blueprint)
 
     app.config.from_object('config')
     app.config.from_pyfile('config.py')
@@ -23,10 +27,19 @@ def create_app(test_config=None):
     except OSError:
         pass
 
+    global input_queue
+    global output_queue
+
     from .views.index import index_bp
     from .views.terminal import terminal_bp
+    from .views.test import test_bp
 
     app.register_blueprint(index_bp)
     app.register_blueprint(terminal_bp)
+    app.register_blueprint(test_bp)
+
+    serial_bg = serialDriver.SerialThread(input_queue, output_queue)
+    serial_bg.daemon = True
+    serial_bg.start()
 
     return app

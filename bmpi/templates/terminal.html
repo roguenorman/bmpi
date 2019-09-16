@@ -1,10 +1,21 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <title>{console title}</title>
-    </head>
-    <body>
-        <h1>This heading is defined in the parent.</h1>
-        <h1>Hello, {{ output }}!</h1>
-    </body>
-</html>
+{% extends "base.html" %}
+{% block title %}Terminal{% endblock %}
+{% block head %}
+
+{{ super() }}
+{% endblock %}
+{% block content %}
+<style>#log{width:100%;height:40em;background:#eee;overflow:scroll;overflow-wrap:break-word}</style>
+<div id="log"></div>
+<script>
+        var targetContainer = document.getElementById("log");
+        const eventSource = new EventSource("/terminal_stream");
+        eventSource.onmessage = function(e) {
+            console.log(e.data)
+            targetContainer.innerHTML += e.data + '<br>';
+        };
+        eventSource.onerror = function(err) {
+        console.error("EventSource failed:", err);
+};    
+</script>
+{% endblock %}
