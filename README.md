@@ -18,10 +18,13 @@ This project uses a RPI zero to replace the Braumesiter wifi module. The bmpi ho
 
 Note: Ensure that the USB to UART is set to 3.3V. For the core-electronics adapter listed above, remove the case of the USB to serial adapter and change it to 3.3v
 
+## Demo Circuit
+
+<img src="https://github.com/roguenorman/bmpi/blob/master/circuit.png"/>
 
 ## Upgrading the Braumeister firmware
 !!Make sure the USB adapter is set to 3.3v.
-To put the BM into bootloader mode, you need to ground the XCK pin
+To put the BM into bootloader mode, you need to ground XCK (pin 4)
 
 Windows:
 1. Connect cable from PC to BM grounding XCK
