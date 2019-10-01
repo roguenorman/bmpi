@@ -3,7 +3,6 @@ import serial
 from time import sleep
 from flask import current_app as app
 from flask import g
-from bmpi import input_queue, output_queue, wifiServer
 
 test_bp = Blueprint('test', __name__)
 

@@ -19,14 +19,14 @@ This project uses a RPI zero to replace the Braumesiter wifi module. The bmpi ho
 Note: Ensure that the USB to UART is set to 3.3V. For the core-electronics adapter listed above, remove the case of the USB to serial adapter and change it to 3.3v
 
 
-## Updating the Braumeister firmware
+## Upgrading the Braumeister firmware
 !!Make sure the USB adapter is set to 3.3v.
 To put the BM into bootloader mode, you need to ground the XCK pin
 
 Windows:
 1. Connect cable from PC to BM grounding XCK
 2. Set the com port with: MODE COM7: baud=38400 parity=n data=8 dtr=off rts=off octs=off odsr=off
-3. Ppen BM update software (can be downloaded from speidel.com)
+3. Open SpeidelSoftwareUpdater-Windows.exe (can be downloaded from speidel.com)
 4. Select firmware
 5. Plug in BM mains (buttons on BM turn yellow)
 6. Press start update (buttons on BM turn red)
