@@ -29,7 +29,7 @@ TX (aka GPIO14)       | Pin 2 (TX)
 RX (aka GPIO15)       | Pin 3 (RX)
 Ground                | Pin 5 (GND)
 5V                    | Pin 1 (VCC)
-                      | Pin 4 (XCK)
+-                     | Pin 4 (XCK)
 
 ## Upgrading the Braumeister firmware
 !!Make sure the USB adapter is set to 3.3v.
