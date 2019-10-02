@@ -20,16 +20,15 @@ Note: Ensure that the USB to UART is set to 3.3V. For the core-electronics adapt
 
 ## Demo Circuit
 
-<img src="https://github.com/roguenorman/bmpi/blob/master/Circuit.png"/>
-
-
 Rpi Pin               | Connector Pin
 --------------------- | ----------------------------
 TX (aka GPIO14)       | Pin 2 (TX)
 RX (aka GPIO15)       | Pin 3 (RX)
 GND                   | Pin 5 (GND)
 GND (bootloader)      | Pin 4 (XCK)
-5V                    | Pin 1 (Vcc)
+3.3V                    | Pin 1 (Vcc)
+
+<img src="https://github.com/roguenorman/bmpi/blob/master/Circuit.png"/>
 
 ## Upgrading the Braumeister firmware
 !!Make sure the USB adapter is set to 3.3v.
