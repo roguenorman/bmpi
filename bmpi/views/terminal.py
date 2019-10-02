@@ -3,7 +3,7 @@ import serial
 from time import sleep
 from flask import current_app as app
 from flask import g
-#from bmpi import input_queue, output_queue, wifiServer
+
 
 terminal_bp = Blueprint('terminal', __name__)
 
@@ -20,21 +20,7 @@ def byteUnstuff(payload):
 
 def checkQueue():
     pass
-#    global output_queue
-#    while True:
-#        if not output_queue.empty():
-#            payload = output_queue.get()
-#            #remove escape bytes
-#            payload = byteUnstuff(payload)
-#            #remove line feed
-#            payload = payload.splitlines()[0]
-#            #remove null bytes
-#            payload = payload.decode().replace('\x00', '')
-#            #send to wifi server
-#            wifiServer.chooseCommand(payload)()               
-#            #format for SSE
-#            payload = "data: "+payload+"\n\n"      
-#            yield payload
+
         
 @terminal_bp.route('/terminal_stream')
 def terminal_request():

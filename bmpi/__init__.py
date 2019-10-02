@@ -1,12 +1,10 @@
 import os
 import threading
 from flask import Flask, g
-#from queue import Queue
 from werkzeug.serving import is_running_from_reloader
 from bmpi import wifiServer, logger
 
-#input_queue = Queue()
-#output_queue = Queue()
+
 
 def create_app(test_config=None):
     # create and configure the app
@@ -36,12 +34,7 @@ def create_app(test_config=None):
     app.register_blueprint(terminal_bp)
     app.register_blueprint(test_bp)
 
-    #serial_bg = serialDriver.SerialThread(input_queue, output_queue)
-    #serial_bg.daemon = True
-    #serial_bg.start()
-
     wifi_srv = wifiServer.wifiServer(logger)
 
- 
 
     return app

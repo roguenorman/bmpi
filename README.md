@@ -5,7 +5,7 @@ This project uses a RPI zero to replace the Braumesiter wifi module. The bmpi ho
 
 ## Features
  * Send commands to the BM
- * update firmware
+ * Update firmware
 
 ## Parts
 

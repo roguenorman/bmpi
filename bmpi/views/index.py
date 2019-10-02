@@ -1,5 +1,4 @@
 from flask import Blueprint, render_template, request
-#from bmpi import input_queue, output_queue, wifiServer
 from flask import current_app as app
 from flask import g
 
