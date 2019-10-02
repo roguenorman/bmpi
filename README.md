@@ -20,7 +20,7 @@ Note: Ensure that the USB to UART is set to 3.3V. For the core-electronics adapt
 
 ## Demo Circuit
 
-<img src="https://github.com/roguenorman/bmpi/blob/master/circuit.png"/>
+<img src="https://github.com/roguenorman/bmpi/blob/master/Circuit.png"/>
 
 ## Upgrading the Braumeister firmware
 !!Make sure the USB adapter is set to 3.3v.
