@@ -27,8 +27,8 @@ Rpi Pin               | Connector Pin
 --------------------- | ----------------------------
 TX (aka GPIO14)       | Pin 2 (TX)
 RX (aka GPIO15)       | Pin 3 (RX)
-Ground                | Pin 5 (GND)
-N/A                   | Pin 4 (XCK)
+GND                   | Pin 5 (GND)
+GND (bootloader)      | Pin 4 (XCK)
 5V                    | Pin 1 (Vcc)
 
 ## Upgrading the Braumeister firmware
