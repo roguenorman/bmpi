@@ -35,14 +35,14 @@ GND (bootloader)      | Pin 4 (XCK)
 The BM will enter bootloader when XCK is grounded and Vcc is supplied (3.3v)
 
 Windows:
-2. Connect cable from PC to BM (XCK grounded and Vcc supplied)
-3. Set the com port with: MODE COM7: baud=38400 parity=n data=8 dtr=off rts=off octs=off odsr=off
-4. Open SpeidelSoftwareUpdater-Windows.exe (can be downloaded from speidel.com)
-5. Select firmware
-6. Plug in BM mains (buttons on BM turn yellow)
-7. Press start update (buttons on BM turn red)
-8. When finished, buttons on BM turn green
-9. Unplug usb and mains
+1. Connect cable from PC to BM (XCK grounded and Vcc supplied)
+2. Set the com port with: MODE COM7: baud=38400 parity=n data=8 dtr=off rts=off octs=off odsr=off
+3. Open SpeidelSoftwareUpdater-Windows.exe (can be downloaded from speidel.com)
+4. Select firmware
+5. Plug in BM mains (buttons on BM turn yellow)
+6. Press start update (buttons on BM turn red)
+7. When finished, buttons on BM turn green
+8. Unplug usb and mains
 
 
 
