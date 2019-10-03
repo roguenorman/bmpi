@@ -34,10 +34,10 @@ For normal operation, XCK and Vcc do not need to be connected
 
 ## Upgrading the Braumeister firmware with a cable
 !!Make sure the USB adapter is set to 3.3v.
-The BM will enter bootloader when XCK is grounded and Vcc is supplied (3.3v)
+The BM will enter bootloader when XCK is grounded ~~and Vcc is supplied (3.3v)~~
 
 Windows:
-1. Connect cable from PC to BM (XCK grounded and Vcc supplied)
+1. Connect cable from PC to BM (XCK grounded ~~and Vcc supplied~~)
 2. Set the com port with: MODE COM7: baud=38400 parity=n data=8 dtr=off rts=off octs=off odsr=off
 3. Open SpeidelSoftwareUpdater-Windows.exe (can be downloaded from speidel.com)
 4. Select firmware
