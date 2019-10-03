@@ -26,17 +26,16 @@ TX (aka GPIO14)       | Pin 2 (TX)
 RX (aka GPIO15)       | Pin 3 (RX)
 GND                   | Pin 5 (GND)
 GND (bootloader)      | Pin 4 (XCK)
-3.3V                    | Pin 1 (Vcc)
+3.3V (bootloader)     | Pin 1 (Vcc)
 
-<img src="https://github.com/roguenorman/bmpi/blob/master/Circuit.png"/>
+<img src="https://github.com/roguenorman/bmpi/blob/master/circuit.png"/>
 
-## Upgrading the Braumeister firmware
+## Upgrading the Braumeister firmware with a cable
 !!Make sure the USB adapter is set to 3.3v.
-The BM will enter bootloader when XCK is pulled high to 2v and VCC is pulled high to 3.3v
+The BM will enter bootloader when XCK is grounded and Vcc is supplied (3.3v)
 
 Windows:
-1. Put BM into bootloader mode
-2. Connect cable from PC to BM 
+2. Connect cable from PC to BM (XCK grounded and Vcc supplied)
 3. Set the com port with: MODE COM7: baud=38400 parity=n data=8 dtr=off rts=off octs=off odsr=off
 4. Open SpeidelSoftwareUpdater-Windows.exe (can be downloaded from speidel.com)
 5. Select firmware
