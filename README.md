@@ -28,13 +28,13 @@ GND                   | Pin 5 (GND)
 GPIO16 (bootloader)   | Pin 4 (XCK)
 3.3V (bootloader)     | Pin 1 (Vcc)
 
-<img src="https://github.com/roguenorman/bmpi/blob/master/circuit.png"/>
+<img src="https://github.com/roguenorman/bmpi/blob/master/Circuit.png"/>
 
 For normal operation, XCK does not need to be grounded
 
 ## Upgrading the Braumeister firmware with a cable
 !!Make sure the USB adapter is set to 3.3v.
-The BM will enter bootloader when XCK is grounded ~~and Vcc is supplied (3.3v)~~
+The BM will enter bootloader when XCK is grounded ~~and Vcc is supplied (3.3v)~~ 
 
 Windows:
 1. Connect cable from PC to BM (XCK grounded ~~and Vcc supplied~~)
