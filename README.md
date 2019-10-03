@@ -25,7 +25,7 @@ Rpi Pin               | Connector Pin
 TX (aka GPIO14)       | Pin 2 (TX)
 RX (aka GPIO15)       | Pin 3 (RX)
 GND                   | Pin 5 (GND)
-GND (bootloader)      | Pin 4 (XCK)
+GPIO16 (bootloader)   | Pin 4 (XCK)
 3.3V (bootloader)     | Pin 1 (Vcc)
 
 <img src="https://github.com/roguenorman/bmpi/blob/master/circuit.png"/>
