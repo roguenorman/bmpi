@@ -30,7 +30,7 @@ GPIO16 (bootloader)   | Pin 4 (XCK)
 
 <img src="https://github.com/roguenorman/bmpi/blob/master/circuit.png"/>
 
-For normal operation, XCK and Vcc do not need to be connected
+For normal operation, XCK does not need to be grounded
 
 ## Upgrading the Braumeister firmware with a cable
 !!Make sure the USB adapter is set to 3.3v.
