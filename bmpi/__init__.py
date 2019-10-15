@@ -35,6 +35,6 @@ def create_app(test_config=None):
     app.register_blueprint(test_bp)
 
     wifi_srv = wifiServer.wifiServer(logger)
-
+    app.wifi_srv = wifi_srv
 
     return app

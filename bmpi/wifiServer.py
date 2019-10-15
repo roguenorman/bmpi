@@ -4,6 +4,7 @@ import struct
 from queue import Queue, Empty
 from bmpi import serialDriver, logger
 import time
+import json
 
 
 
@@ -12,9 +13,11 @@ interface = "wlan0"
 class wifiServer():
  
     def __init__(self, logger):
+        #dont need self.logger?
         self.logger = logger
         self.input_queue = Queue()
         self.output_queue = Queue()
+        self.http_list = list()
 
         self.serial_bg = serialDriver.SerialThread(self, self.input_queue, self.output_queue)
         self.serial_bg.daemon = True
@@ -136,6 +139,22 @@ class wifiServer():
             'at+rsi_cls=1': self.close_socket
         }.get(command, lambda: "Invalid command")
 
+    #decodes http response from BM
+    def decode_response(self, payload):
+        for i in self.http_list:
+            payload = self.byteUnstuff(i)
+            #headers
+            if '200 OK' in payload.decode():
+            payload = payload.replace('at+rsi_snd=1,0,0,0,HTTP/1.1 200 OK', '')
+
+            #content
+            else:
+                payload = payload.replace('at+rsi_snd=1,0,0,0,', '')
+
+
+            
+
+
 
     #removes null bytes and formats for SSE
     #returns string
@@ -144,25 +163,44 @@ class wifiServer():
         payload = "data: "+payload+"\n\n"
         return payload
 
-    #takes a string with escapebytes and replaces it with \r\n
+    #takes bytes with escapebytes and replaces it with \r\n
     def byteUnstuff(self, payload):
         payload = payload.replace(b'\xdb\xdc', b'\r\n')
         return payload.replace(b'\x00', b'')
     
     # read line from queue as bytes
     def receiveFromSerial(self):
-    
+
         try:  payload = self.output_queue.get_nowait()
         except Empty:
             print('no output yet')
         else:
+            #if http response add it to list (need to destoy list after all http response is delt with)
+            if 'at+rsi_snd' in payload.decode('iso-8859-1'):
+                self.http_list.append(payload)
+            else:
+                if not self.http_list:
+                    #list is empty
+                    pass
+                else:
+                    #list is full
+                    self.decode_response(self.http_list)
+                    self.http_list.clear()
+
+
+
             #remove escape and null bytes
             payload = self.byteUnstuff(payload)
             #remove line feed
-            payload = payload.splitlines()[0]
-            
-            self.command(payload.decode())()
-            logger.log('Recv: ', payload.decode('iso-8859-1'))
+            payload_utf8 = payload.decode()
+            payload_utf8 = payload_utf8.rstrip('\r\n')
+
+            self.command(payload_utf8)()
+
+            #send to logger as latin-1
+            payload = payload.decode('iso-8859-1')
+            payload = payload.rstrip('\r\n')
+            logger.log('Recv: ', payload)
 
     
     def sendToSerial(self, payload):
@@ -171,3 +209,4 @@ class wifiServer():
         payload = payload.splitlines()[0]
         #send to logger
         logger.log('Send: ', payload.decode('iso-8859-1'))
+
