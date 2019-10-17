@@ -14,7 +14,7 @@ class wifiServer():
  
     def __init__(self, logger):
         #dont need self.logger?
-        self.logger = logger
+        #self.logger = logger
         self.input_queue = Queue()
         self.output_queue = Queue()
         self.http_list = list()
@@ -141,19 +141,43 @@ class wifiServer():
 
     #decodes http response from BM
     def decode_response(self, payload):
+        headers = {}
+        data = {}
         for i in self.http_list:
-            payload = self.byteUnstuff(i)
-            #headers
-            if '200 OK' in payload.decode():
-            payload = payload.replace('at+rsi_snd=1,0,0,0,HTTP/1.1 200 OK', '')
+            resp = i.split("\r\n\r\n")
+           
+            body = resp[-1:]
+            fields = resp[:-1]
 
-            #content
+            if len(fields) > 0:
+                status = {}
+                fields = fields[0].split("\r\n")
+                fields = fields[1:] #ignore the HTTP/1.1 200 OK
+                for field in fields:
+                    key,value = field.split(':')#split each line by http field name and value     
+                    headers[key] = value
+                #status
+                body = body[0].split("\r\n")
+                body = body[:-1]
+                print(body)
+                data['status'] = body[0]
+
+            #recipes
             else:
-                payload = payload.replace('at+rsi_snd=1,0,0,0,', '')
-
+                recipes = {}
+                body = body[0].split("\r\n")
+                body = body[1:-1]
+                for i in range(len(body)):
+                    d = {}
+                    value,key = body[i].split('.')
+                    d[key] = value
+                    recipes[i] = d
+                data['recipes'] = recipes
 
             
 
+        print(headers)
+        print(data)
 
 
     #removes null bytes and formats for SSE
@@ -165,8 +189,11 @@ class wifiServer():
 
     #takes bytes with escapebytes and replaces it with \r\n
     def byteUnstuff(self, payload):
-        payload = payload.replace(b'\xdb\xdc', b'\r\n')
+        return payload.replace(b'\xdb\xdc', b'\r\n')
+
+    def removeNullBytes():
         return payload.replace(b'\x00', b'')
+
     
     # read line from queue as bytes
     def receiveFromSerial(self):
@@ -175,8 +202,13 @@ class wifiServer():
         except Empty:
             print('no output yet')
         else:
+            #remove escapte bytes
+            payload = self.byteUnstuff(payload)
+            #decode response
+            payload = payload.decode()
+
             #if http response add it to list (need to destoy list after all http response is delt with)
-            if 'at+rsi_snd' in payload.decode('iso-8859-1'):
+            if 'at+rsi_snd' in payload:
                 self.http_list.append(payload)
             else:
                 if not self.http_list:
@@ -188,19 +220,10 @@ class wifiServer():
                     self.http_list.clear()
 
 
+            self.command(payload.rstrip('\r\n'))()
 
-            #remove escape and null bytes
-            payload = self.byteUnstuff(payload)
-            #remove line feed
-            payload_utf8 = payload.decode()
-            payload_utf8 = payload_utf8.rstrip('\r\n')
-
-            self.command(payload_utf8)()
-
-            #send to logger as latin-1
-            payload = payload.decode('iso-8859-1')
-            payload = payload.rstrip('\r\n')
-            logger.log('Recv: ', payload)
+            #send to logger
+            logger.log('Recv: ', payload.rstrip('\r\n'))
 
     
     def sendToSerial(self, payload):
@@ -208,5 +231,5 @@ class wifiServer():
         #remove line feed
         payload = payload.splitlines()[0]
         #send to logger
-        logger.log('Send: ', payload.decode('iso-8859-1'))
+        logger.log('Send: ', payload.decode('latin-1'))
 
