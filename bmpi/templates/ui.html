@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+{% block head %}
+
+{{ super() }}
+{% endblock %}
+{% block content %}
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta content="text/html;charset=ISO-8859-1" http-equiv=" content-type">
+<title>BMPi</title>
+</head>
+    <table style="text-align: left; width: 380px; height: 240px; font-family: DIN;" bgcolor="#ffffff" border="1" frame="box">
+        <tbody>
+        <tr style="text-align: center; height: 20px">
+            <td colspan="2" height="40"height="10" >ip address</td>
+            <td height="10" >P/H</td>
+        </tr>
+        <tr height="40" style="text-align: center;">
+            <td colspan="2" >BMPi</td>
+            <td colspan="2" >BMPi</td>
+        </tr>
+        <tr colspan="2" height="40" style="text-align: center;">
+            <td colspan="2">Temp</td>
+            <td colspan="2">50C</td>
+        </tr>  
+        <tr height="40" style="text-align: center;">
+            <td>button</td>
+            <td>button</td>
+            <td>button</td>
+            <td>button</td>
+        </tr>  
+    <table style="text-align: left; width: 380px;" border="0">
+        <tr>
+            <form method="post" action="/ui">
+                <button type="submit" name="key1" value="key1"><img src="static/circle-96.png" alt="key 1"></button>
+                <button type="submit" name="key2" value="key2"><img src="static/circle-96.png" alt="key 2"></button>
+                <button type="submit" name="key3" value="key3"><img src="static/circle-96.png" alt="key 3"></button>
+                <button type="submit" name="key4" value="key4"><img src="static/circle-96.png" alt="key 4"></button>
+            </form>
+        </tr>
+        <tbody>
+{% endblock %}
