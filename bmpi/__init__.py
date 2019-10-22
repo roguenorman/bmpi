@@ -26,13 +26,13 @@ def create_app(test_config=None):
     except OSError:
         pass
 
-    from .views.index import index_bp
-    from .views.terminal import terminal_bp
-    from .views.test import test_bp
 
-    app.register_blueprint(index_bp)
+    from .views.terminal import terminal_bp
+    from .views.ui import ui_bp
+
+
     app.register_blueprint(terminal_bp)
-    app.register_blueprint(test_bp)
+    app.register_blueprint(ui_bp)
 
     wifi_srv = wifiServer.wifiServer(logger)
     app.wifi_srv = wifi_srv

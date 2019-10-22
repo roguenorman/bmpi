@@ -149,6 +149,7 @@ class wifiServer():
             body = resp[-1:]
             fields = resp[:-1]
 
+            #contains headers
             if len(fields) > 0:
                 status = {}
                 fields = fields[0].split("\r\n")
@@ -159,7 +160,6 @@ class wifiServer():
                 #status
                 body = body[0].split("\r\n")
                 body = body[:-1]
-                print(body)
                 data['status'] = body[0]
 
             #recipes
@@ -223,7 +223,7 @@ class wifiServer():
             self.command(payload.rstrip('\r\n'))()
 
             #send to logger
-            logger.log('Recv: ', payload.rstrip('\r\n'))
+            #logger.log('Recv: ', payload.rstrip('\r\n'))
 
     
     def sendToSerial(self, payload):
@@ -231,5 +231,5 @@ class wifiServer():
         #remove line feed
         payload = payload.splitlines()[0]
         #send to logger
-        logger.log('Send: ', payload.decode('latin-1'))
+        #logger.log('Send: ', payload.decode('latin-1'))
 
