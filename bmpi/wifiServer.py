@@ -139,28 +139,41 @@ class wifiServer():
             'at+rsi_cls=1': self.close_socket
         }.get(command, lambda: "Invalid command")
 
-    #decodes http response from BM
+    #decodes http response from BM. There are 2 types of responses, receipes and status of BM
     def decode_response(self, payload):
         headers = {}
-        data = {}
+        bmpi = {}
         for i in self.http_list:
             resp = i.split("\r\n\r\n")
            
             body = resp[-1:]
             fields = resp[:-1]
-
-            #contains headers
+            #contains headers it means its the status
             if len(fields) > 0:
-                status = {}
+
                 fields = fields[0].split("\r\n")
                 fields = fields[1:] #ignore the HTTP/1.1 200 OK
                 for field in fields:
                     key,value = field.split(':')#split each line by http field name and value     
                     headers[key] = value
-                #status
+                #extract serialnumber date and status. last entry is bmpi status
                 body = body[0].split("\r\n")
-                body = body[:-1]
-                data['status'] = body[0]
+                body = body[:-1]           
+                date, serialnum, state = body[0].split(";")
+
+                bmpi["date"] = date
+                bmpi["serialnum"] = serialnum
+                print(state)
+
+                items = state.split("X")
+
+                bmpi["clock"] = items[1]
+                bmpi["unit"] = items[2]
+                bmpi["unknown3"] = items[3]
+                bmpi["target_temp"] = items[4]
+                bmpi["actual_temp"] = items[5]
+                bmpi["target_time"] = items[6]
+                bmpi["elapsed_time"] = items[7] 
 
             #recipes
             else:
@@ -175,10 +188,8 @@ class wifiServer():
                 data['recipes'] = recipes
 
             
-
-        print(headers)
-        print(data)
-
+        #print(bmpi)
+        return(bmpi)
 
     #removes null bytes and formats for SSE
     #returns string
