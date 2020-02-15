@@ -2,9 +2,9 @@
 import socket
 import struct
 from queue import Queue, Empty
-from bmpi import serialDriver, logger
+from bmpi import serialDriver
+from flask import current_app as app
 import time
-import json
 
 
 
@@ -13,8 +13,7 @@ interface = "wlan0"
 class wifiServer():
  
     def __init__(self, logger):
-        #dont need self.logger?
-        #self.logger = logger
+        self.logger = logger
         self.input_queue = Queue()
         self.output_queue = Queue()
         self.http_list = list()
@@ -159,44 +158,37 @@ class wifiServer():
                 #extract serialnumber date and status. last entry is bmpi status
                 body = body[0].split("\r\n")
                 body = body[:-1]           
-                date, serialnum, state = body[0].split(";")
+                version_date, serialnum, state = body[0].split(";")
+                version,month,day,year = version_date.split(" ")
 
-                bmpi["date"] = date
-                bmpi["serialnum"] = serialnum
-                print(state)
 
                 items = state.split("X")
-
+                bmpi['version'] = version
+                bmpi["date"] = (day + " " + month + " " + year)
+                bmpi["serialnum"] = serialnum
                 bmpi["clock"] = items[1]
                 bmpi["unit"] = items[2]
                 bmpi["unknown3"] = items[3]
                 bmpi["target_temp"] = items[4]
                 bmpi["actual_temp"] = items[5]
                 bmpi["target_time"] = items[6]
-                bmpi["elapsed_time"] = items[7] 
+                bmpi["elapsed_time"] = items[7]
 
-            #recipes
-            else:
-                recipes = {}
-                body = body[0].split("\r\n")
-                body = body[1:-1]
-                for i in range(len(body)):
-                    d = {}
-                    value,key = body[i].split('.')
-                    d[key] = value
-                    recipes[i] = d
-                data['recipes'] = recipes
+        return bmpi
 
-            
-        #print(bmpi)
-        return(bmpi)
+            # #recipes
+            # else:
+            #     recipes = {}
+            #     body = body[0].split("\r\n")
+            #     #print(body)
+            #     body = body[1:-1]
+            #     for i in range(len(body)):
+            #         d = {}
+            #         value,key = body[i].split('.')
+            #         d[key] = value
+            #         recipes[i] = d
+            #     data['recipes'] = recipes
 
-    #removes null bytes and formats for SSE
-    #returns string
-    def format_for_sse(payload):
-        payload = payload.replace('\x00', '')
-        payload = "data: "+payload+"\n\n"
-        return payload
 
     #takes bytes with escapebytes and replaces it with \r\n
     def byteUnstuff(self, payload):
@@ -218,7 +210,7 @@ class wifiServer():
             #decode response
             payload = payload.decode()
 
-            #if http response add it to list (need to destoy list after all http response is delt with)
+            #if http response add it to list (need to destroy list after all http response is delt with)
             if 'at+rsi_snd' in payload:
                 self.http_list.append(payload)
             else:
@@ -227,14 +219,18 @@ class wifiServer():
                     pass
                 else:
                     #list is full
-                    self.decode_response(self.http_list)
+                    response = self.decode_response(self.http_list)
+                    #app.log.log('Recv: ', response)
                     self.http_list.clear()
+                    return
 
 
             self.command(payload.rstrip('\r\n'))()
 
             #send to logger
-            #logger.log('Recv: ', payload.rstrip('\r\n'))
+            self.logger.log('Recv: ', payload.rstrip('\r\n'))
+
+            
 
     
     def sendToSerial(self, payload):
@@ -242,5 +238,5 @@ class wifiServer():
         #remove line feed
         payload = payload.splitlines()[0]
         #send to logger
-        #logger.log('Send: ', payload.decode('latin-1'))
+        #app.log.log('Send: ', payload.decode('latin-1'))
 

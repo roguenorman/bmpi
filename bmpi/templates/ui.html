@@ -10,6 +10,19 @@
 <head>
 <meta content="text/html;charset=ISO-8859-1" http-equiv=" content-type">
 <title>BMPi</title>
+<script>
+    var tempContainer = document.getElementById("temp");
+
+    const eventSource = new EventSource("/stream");
+    eventSource.onmessage = function(e) {
+        console.log(e.data)
+
+        tempContainer.innerHTML += e.data + '<br>';
+    };
+    eventSource.onerror = function(err) {
+    console.error("EventSource failed:", err);
+    };    
+</script>
 </head>
     <table style="text-align: left; width: 380px; height: 240px; font-family: DIN;" bgcolor="#ffffff" border="1" frame="box">
         <tbody>
@@ -23,7 +36,7 @@
         </tr>
         <tr colspan="2" height="40" style="text-align: center;">
             <td colspan="2">Temp</td>
-            <td colspan="2">50C</td>
+            <td id="temp" colspan="2">50C</td>
         </tr>  
         <tr height="40" style="text-align: center;">
             <td>button</td>
@@ -34,10 +47,10 @@
     <table style="text-align: left; width: 380px;" border="0">
         <tr>
             <form method="post" action="/ui">
-                <button type="submit" name="key1" value="key1"><img src="static/circle-96.png" alt="key 1"></button>
-                <button type="submit" name="key2" value="key2"><img src="static/circle-96.png" alt="key 2"></button>
-                <button type="submit" name="key3" value="key3"><img src="static/circle-96.png" alt="key 3"></button>
-                <button type="submit" name="key4" value="key4"><img src="static/circle-96.png" alt="key 4"></button>
+                <button type="submit" name="key" value="/bm.txt?k=1"><img src="static/circle-96.png" alt="key 1"></button>
+                <button type="submit" name="key" value="/bm.txt?k=2"><img src="static/circle-96.png" alt="key 2"></button>
+                <button type="submit" name="key" value="/bm.txt?k=3"><img src="static/circle-96.png" alt="key 3"></button>
+                <button type="submit" name="key" value="/bm.txt?k=4"><img src="static/circle-96.png" alt="key 4"></button>
             </form>
         </tr>
         <tbody>
