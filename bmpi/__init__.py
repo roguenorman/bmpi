@@ -1,9 +1,9 @@
 import os
 import threading
+from queue import Queue, Empty
 from flask import Flask, g
 from werkzeug.serving import is_running_from_reloader
-from bmpi import wifiServer, logger, views
-#from bmpi import wifiServer, views
+from bmpi import wifiServer, views, logger
 
 
 
@@ -31,14 +31,11 @@ def create_app(test_config=None):
     from .views.terminal import terminal_bp
     from .views.ui import ui_bp
 
-
     app.register_blueprint(terminal_bp)
     app.register_blueprint(ui_bp)
 
-    log = logger.logger()
-    app.log = log
 
-    wifi_srv = wifiServer.wifiServer(log)
+    wifi_srv = wifiServer.wifiServer()
     app.wifi_srv = wifi_srv
 
 

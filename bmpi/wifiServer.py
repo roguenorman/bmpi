@@ -1,26 +1,30 @@
 #!/usr/bin/python3
 import socket
 import struct
-from queue import Queue, Empty
-from bmpi import serialDriver
-from flask import current_app as app
 import time
+import json
+from queue import Queue, Empty
+from bmpi import serialDriver, logger
 
 
 
+debug = True
 interface = "wlan0"
 
 class wifiServer():
  
-    def __init__(self, logger):
-        self.logger = logger
-        self.input_queue = Queue()
-        self.output_queue = Queue()
-        self.http_list = list()
+    def __init__(self):
+        self.serial_input_queue = Queue()
+        self.serial_output_queue = Queue()
 
-        self.serial_bg = serialDriver.SerialThread(self, self.input_queue, self.output_queue)
+        self.http_list = list()
+        #self.logger = logger
+
+        
+        self.serial_bg = serialDriver.SerialThread(self, self.serial_input_queue, self.serial_output_queue)
         self.serial_bg.daemon = True
         self.serial_bg.start()
+
 
     ##functions to setup the wifi of the bmpi
     ##send all data to the serial port in binary
@@ -52,15 +56,15 @@ class wifiServer():
     #sends OK to the BM
     def send_ok(self):
         self.sendToSerial(b'OK\r\n')
-        #input_queue.put(b'OK\r\n')
+        #serial_input_queue.put(b'OK\r\n')
     
     def send_mac(self):
         self.sendToSerial(b'OK b8 27 eb bd 63 18 \r\n')
-        #input_queue.put(b'OK b8 27 eb bd 63 18 \r\n')
+        #serial_input_queue.put(b'OK b8 27 eb bd 63 18 \r\n')
     
     def send_fw(self):
         self.sendToSerial(b'OK 4.8.4\r\n')
-        #input_queue.put(b'OK 4.8.4\r\n')
+        #serial_input_queue.put(b'OK 4.8.4\r\n')
     
     #first command to configure band. 0 = 2.4Ghz
     def select_band(self):
@@ -174,7 +178,7 @@ class wifiServer():
                 bmpi["target_time"] = items[6]
                 bmpi["elapsed_time"] = items[7]
 
-        return bmpi
+        return json.dumps(bmpi)
 
             # #recipes
             # else:
@@ -201,15 +205,15 @@ class wifiServer():
     # read line from queue as bytes
     def receiveFromSerial(self):
 
-        try:  payload = self.output_queue.get_nowait()
+        try:  payload = self.serial_output_queue.get_nowait()
         except Empty:
             print('no output yet')
         else:
             #remove escapte bytes
             payload = self.byteUnstuff(payload)
+            
             #decode response
             payload = payload.decode()
-
             #if http response add it to list (need to destroy list after all http response is delt with)
             if 'at+rsi_snd' in payload:
                 self.http_list.append(payload)
@@ -218,25 +222,21 @@ class wifiServer():
                     #list is empty
                     pass
                 else:
-                    #list is full
-                    response = self.decode_response(self.http_list)
-                    #app.log.log('Recv: ', response)
+                    #list is full so decode response
+                    #decode_response returns json
+                    payload = self.decode_response(self.http_list)
+                    self.sendToLogger(payload)
                     self.http_list.clear()
                     return
 
 
             self.command(payload.rstrip('\r\n'))()
+            self.sendToLogger(payload)
 
-            #send to logger
-            self.logger.log('Recv: ', payload.rstrip('\r\n'))
-
-            
-
-    
     def sendToSerial(self, payload):
-        self.input_queue.put(payload)
-        #remove line feed
-        payload = payload.splitlines()[0]
-        #send to logger
-        #app.log.log('Send: ', payload.decode('latin-1'))
+        self.serial_input_queue.put(payload)
+        #payload = payload.splitlines()[0]
 
+    #always send json to logger
+    def sendToLogger(self, payload):
+        logger.logger_input_queue.put(payload)

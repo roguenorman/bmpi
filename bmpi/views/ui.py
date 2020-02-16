@@ -24,7 +24,7 @@ def event_stream():
 
 @ui_bp.route('/stream')
 def stream():
-    newresponse = Response(app.log.sse_event(), mimetype="text/event-stream")
+    newresponse = Response(event_stream(), mimetype="text/event-stream")
     newresponse.headers.add('Access-Control-Allow-Origin', '*')
     newresponse.headers.add('Content-Type', 'text/event-stream')
     return newresponse

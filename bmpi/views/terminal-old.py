@@ -3,7 +3,7 @@ import serial
 from time import sleep
 from flask import current_app as app
 from flask import g
-from bmpi import input_queue, output_queue, wifiServer
+from bmpi import serial_input_queue, serial_output_queue, wifiServer
 
 terminal_bp = Blueprint('terminal', __name__)
 
@@ -24,10 +24,10 @@ terminal_bp = Blueprint('terminal', __name__)
 
 #recipe = ;2
 def checkQueue():
-    global output_queue
+    global serial_output_queue
     while True:
-        if not output_queue.empty():
-            payload = output_queue.get()
+        if not serial_output_queue.empty():
+            payload = serial_output_queue.get()
             print('retreiving from queue')
             #if response is data
             if b'at+rsi_snd=1,0,0,0,' in payload:

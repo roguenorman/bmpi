@@ -10,12 +10,11 @@ SERIAL_PORT = '/dev/ttyAMA0'
 
 class SerialThread(threading.Thread):
  
-    def __init__(self, wifiServer, input_queue, output_queue):
+    def __init__(self, wifiServer, serial_input_queue, serial_output_queue):
         threading.Thread.__init__(self)
-        self.input_queue = input_queue
-        self.output_queue = output_queue
+        self.serial_input_queue = serial_input_queue
+        self.serial_output_queue = serial_output_queue
         self.sp = None        
-        #self.sp = serial.Serial(SERIAL_PORT, 115200, parity='N', stopbits=1, bytesize=8, rtscts=0, dsrdtr=0)
         self.stop_event = threading.Event()
         self.wifiServer = wifiServer
  
@@ -42,17 +41,15 @@ class SerialThread(threading.Thread):
             while True:
                 try:
                     # look for incoming flask request
-                    if not self.input_queue.empty():
-                        data = self.input_queue.get()
+                    if not self.serial_input_queue.empty():
+                        data = self.serial_input_queue.get()
                         # send it to the serial device
                         self.writeSerial(data)
-                        #print (data)
                     # look for incoming serial data
                     if (self.sp.inWaiting() > 0):
                         data = self.readSerial()
                         # send it back to flask
-                        self.output_queue.put(data)
-                        #print (data)
+                        self.serial_output_queue.put(data)
                         self.wifiServer.receiveFromSerial()
                 except (IOError, OSError, serial.SerialException) as e:
                     if self.sp:

@@ -1,43 +1,25 @@
 #!/usr/bin/python3
+import json
+from queue import Queue, Empty
 
-payload = ""
+#logger reads from the logger queue and yields
+#ui and terminal receives messages from the logger
 
-
-class logger():
+logger_input_queue = Queue()
+logger_output_queue = Queue()
+#class logger():
  
-    def __init__(self):
-        self.payload = ""
-        #self.input_queue = Queue()
-        #self.output_queue = Queue()
-        #self.http_list = list()
+    #def __init__(self):
+        #self.logger_input_queue = Queue()
+        #self.logger_output_queue = Queue()
 
-        #self.serial_bg = serialDriver.SerialThread(self, self.input_queue, self.output_queue)
-        #self.serial_bg.daemon = True
-        #self.serial_bg.start()
-
-    def log(self, action, message):
-        global payload
-        print('message')
-        print(message)
-        message = message.replace('\x00', '')
-        message = "data: "+message+"\n\n"
-        message = message.replace('\x00', '')
-        payload = message
-
-    def sse_event(self):
-        global payload
-        yield payload
+def log_message(self, action, message):
+    logger_output_queue.put(message)
+    #message = message.replace('\x00', '')
+    message = "data: "+message+"\n\n"
+    print(message)
+    payload = message
 
 
 
-#def format_for_sse(payload):
-    #global payload = payload.replace('\x00', '')
-    #payload = "data: "+payload+"\n\n"
-    #yield payload
-
-
-# logger will send to the terminal and ui pages for sse
-
-#both pages have a function that calls a fucntion here
-#the function here yields
 

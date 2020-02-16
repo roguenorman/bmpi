@@ -1,8 +1,7 @@
 #!/usr/bin/python3
-from bmpi import input_queue, output_queue
+from bmpi import serial_input_queue, serial_output_queue
 import socket
 import struct
-from bmpi import input_queue, output_queue
 
 ##functions to setup the wifi of the bmpi
 ##send all data to the serial port in binary
@@ -30,16 +29,16 @@ def get_gw():
 
 #sends OK to the BM
 def send_ok():
-    global input_queue
-    input_queue.put(b'OK\r\n')
+    global serial_input_queue
+    serial_input_queue.put(b'OK\r\n')
 
 def send_mac():
-    global input_queue
-    input_queue.put(b'OK b8 27 eb bd 63 18 \r\n')
+    global serial_input_queue
+    serial_input_queue.put(b'OK b8 27 eb bd 63 18 \r\n')
 
 def send_fw():
-    global input_queue
-    input_queue.put(b'OK 4.8.4\r\n')
+    global serial_input_queue
+    serial_input_queue.put(b'OK 4.8.4\r\n')
  
 #first command to configure band. 0 = 2.4Ghz
 def select_band():
@@ -63,9 +62,9 @@ def init():
 #RSSI information indicates the signal strength of the Access Point.
 
 def ssid_scan():
-    global input_queue
+    global serial_input_queue
     ssid = b'OK Data\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x14\r\n'
-    input_queue.put(ssid)
+    serial_input_queue.put(ssid)
 
 def data_scan():
     ssid_scan()
@@ -90,20 +89,20 @@ gw = get_gw()
 
 #DHCP_MODE, IP address, SUBNET, GATEWAY
 def config_ip():
-    global input_queue
+    global serial_input_queue
     dhcp = b'OK\xb8\x27\xeb\xbd\x63\x18\xac\x10\x14.\xff\xff\xff\x00\xac\x10\x14\xfe\r\n'
-    input_queue.put(dhcp)
+    serial_input_queue.put(dhcp)
 
 #report wifi signal strength to BM
 def rssi():
-    global input_queue
+    global serial_input_queue
     rssi = b'OK\x1f\r\n' #iwlist scan
-    input_queue.put(rssi)
+    serial_input_queue.put(rssi)
 
 def open_socket():
-    global input_queue
+    global serial_input_queue
     socket = b'OK\x01\r\n'
-    input_queue.put(socket)
+    serial_input_queue.put(socket)
 
 def close_socket():
     send_ok()
