@@ -56,8 +56,6 @@ class SerialThread(threading.Thread):
                         self.sp.close()
                         #self.sp = None
 
-
-
     def read_message(self):
         self.exit_on_fatal_error()
         try:

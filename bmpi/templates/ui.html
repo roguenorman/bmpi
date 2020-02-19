@@ -10,19 +10,6 @@
 <head>
 <meta content="text/html;charset=ISO-8859-1" http-equiv=" content-type">
 <title>BMPi</title>
-<script>
-    var tempContainer = document.getElementById("temp");
-
-    const eventSource = new EventSource("/stream");
-    eventSource.onmessage = function(e) {
-        console.log(e.data)
-
-        tempContainer.innerHTML += e.data + '<br>';
-    };
-    eventSource.onerror = function(err) {
-    console.error("EventSource failed:", err);
-    };    
-</script>
 </head>
     <table style="text-align: left; width: 380px; height: 240px; font-family: DIN;" bgcolor="#ffffff" border="1" frame="box">
         <tbody>
@@ -51,7 +38,23 @@
                 <button type="submit" name="key" value="/bm.txt?k=2"><img src="static/circle-96.png" alt="key 2"></button>
                 <button type="submit" name="key" value="/bm.txt?k=3"><img src="static/circle-96.png" alt="key 3"></button>
                 <button type="submit" name="key" value="/bm.txt?k=4"><img src="static/circle-96.png" alt="key 4"></button>
+                <button type="submit" name="key" value="/rz.txt"><img src="static/circle-96.png" alt="rz"></buttom>
             </form>
         </tr>
+        <script>
+            var tempContainer = document.getElementById("temp");
+        
+            const eventSource = new EventSource("/stream");
+            eventSource.onmessage = function(e) {
+                console.log(e.data)
+                const obj = JSON.parse(e.data);
+                console.log(obj.target_temp)
+        
+                tempContainer.innerHTML = obj.target_temp + '<br>';
+            };
+            eventSource.onerror = function(err) {
+            console.error("EventSource failed:", err);
+            };    
+        </script>
         <tbody>
 {% endblock %}
