@@ -1,5 +1,4 @@
 from bmpi import create_app
-from bmpi import serialDriver
 
 app = create_app()
 

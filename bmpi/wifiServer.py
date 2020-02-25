@@ -4,18 +4,26 @@ import struct
 import time
 import json
 from queue import Queue, Empty
-from bmpi import serialDriver, logger
+from bmpi import serialDriver
+from flask import request
 
 
 
 debug = True
 interface = "wlan0"
+#log_input_queue = Queue()
+http_list = list()
+#requestUri = None
 
 class wifiServer():
  
     def __init__(self):
         self.serial_input_queue = Queue()
         self.serial_output_queue = Queue()
+
+        self.log_input_queue = Queue()
+        self.http_list = list()
+        self.requestUri = str()
 
         self.serial_bg = serialDriver.SerialThread(self, self.serial_input_queue, self.serial_output_queue)
         self.serial_bg.daemon = True
@@ -142,68 +150,157 @@ class wifiServer():
     def sendToSerial(self, payload):
         self.serial_input_queue.put(payload)
 
-    #always send json to logger queue
-    def sendToLogger(self, payload):
-        logger.logger_input_queue.put(payload)
+    #sends json data to log queue
+    def sendToLogQueue(self, jsonData):
+        print("sending json to log queue:")
+        print(jsonData)
+        self.log_input_queue.put(jsonData)
 
-    # # read line from queue as bytes
+    #read line from queue as bytes
     def receiveFromSerial(self):
-        try:  payload = self.serial_output_queue.get_nowait()
+        try:  serialData = self.serial_output_queue.get_nowait()
         except Empty:
             print('no output yet')
         else:
             #takes bytes with escapebytes and replaces it with \r\n
-            payload = payload.replace(b'\xdb\xdc', b'\r\n')
+            serialData = serialData.replace(b'\xdb\xdc', b'\r\n')
             #decode from bytes to str
-            payload = payload.decode()
-            #send to logger to process message
-            logger.decode_response(payload)         
+            serialData = serialData.decode()
             #send AT command back to BM
-            self.command(payload.rstrip('\r\n'))()
+            self.command(serialData.rstrip('\r\n'))()
+            #process message and send to log queue
+            jsonData = self.decode_response2(serialData)
+            #send to log queue as json
+            self.sendToLogQueue(jsonData)
 
-    # #decodes http response from BM.
-    # def decode_response(self, payload):
-    #     headers = {}
-    #     bmpi = {}
-    #     for i in self.http_list:
-    #         resp = i.split("\r\n\r\n")
-           
-    #         body = resp[-1:]
-    #         fields = resp[:-1]
-    #         #contains headers it means its the status
-    #         if len(fields) > 0:
+    #creates a list from the serial data so we can process it and return json
+    #if its a AT command return json
+    #TODO clean up the list > dict > json
+    def decode_response2(self, serialData):
+        print ("requestUri is: " + self.requestUri)
+        #button push 
+        if  "/bm.txt?" in self.requestUri and 'at+rsi_snd' in serialData:
+            self.http_list.append(serialData)
+            self.requestUri = ""
+            # process list into json
+            jsonData = self.decode(self.http_list)
+            return jsonData
+        #recipe url
+        if "/rz.txt" in self.requestUri and 'at+rsi_snd' in serialData:
+            #need to have 2 entries in http_list
+            if len(self.http_list) < 2:
+                self.http_list.append(serialData)
+            else:
+                self.requestUri = ""
+                jsonData = decode(self.http_list)
+                return jsonData
+        #AT command
+        else:
+            #remove EOL characters
+            serialData.rstrip()
+            data = {"at_command": serialData}
+            return json.dumps(data)
 
-    #             fields = fields[0].split("\r\n")
-    #             fields = fields[1:] #ignore the HTTP/1.1 200 OK
-    #             for field in fields:
-    #                 key,value = field.split(':')#split each line by http field name and value     
-    #                 headers[key] = value
-    #             #extract serialnumber date and status. last entry is bmpi status
-    #             body = body[0].split("\r\n")
-    #             body = body[:-1]           
-    #             version_date, serialnum, state = body[0].split(";")
-    #             version,month,day,year = version_date.split(" ")
+    #dont need to pass httplist since its global
+    def decode2(self, httpList):
+        #recipe
+        if len(httpList) == 2:
+            pass
+        #bm.txt
+        else:
+            pass
+        self.http_list.clear()
+        return json.dumps(bmpi)
 
+    #extracts the status from the list
+    #accepts list, returns json
+    def decode(self, httpList):
+        bmpi = {}
+        headers = {}
+        for i in httpList:
+            resp = i.split("\r\n\r\n")
+            body = resp[-1:]
+            fields = resp[:-1]
+            #contains headers it means its the /bm.txt
+            if len(fields) > 0:
+                fields = fields[0].split("\r\n")
+                fields = fields[1:] #ignore the HTTP/1.1 200 OK
+                for field in fields:
+                    key,value = field.split(':')#split each line by http field name and value     
+                    headers[key] = value
+                #extract serialnumber date and status. last entry is bmpi status
+                body = body[0].split("\r\n")
+                body = body[:-1]           
+                version_date, serialnum, state = body[0].split(";")
+                version,month,day,year = version_date.split(" ")
+                items = state.split("X")
+                bmpi['version'] = version
+                bmpi["date"] = (day + " " + month + " " + year)
+                bmpi["serialnum"] = serialnum
+                bmpi["clock"] = items[1]
+                bmpi["unit"] = items[2]
+                bmpi["unknown3"] = items[3]
+                bmpi["target_temp"] = items[4]
+                bmpi["actual_temp"] = items[5]
+                bmpi["target_time"] = items[6]
+                bmpi["elapsed_time"] = items[7] 
 
-    #             items = state.split("X")
-    #             bmpi['version'] = version
-    #             bmpi["date"] = (day + " " + month + " " + year)
-    #             bmpi["serialnum"] = serialnum
-    #             bmpi["clock"] = items[1]
-    #             bmpi["unit"] = items[2]
-    #             bmpi["unknown3"] = items[3]
-    #             bmpi["target_temp"] = items[4]
-    #             bmpi["actual_temp"] = items[5]
-    #             bmpi["target_time"] = items[6]
-    #             bmpi["elapsed_time"] = items[7]
+            self.http_list.clear()
+            return json.dumps(bmpi)
 
-    #     return json.dumps(bmpi)
-
-
-    # #takes bytes with escapebytes and replaces it with \r\n
-    # def byteUnstuff(self, payload):
-    #     return payload.replace(b'\xdb\xdc', b'\r\n')
-
-    # def removeNullBytes():
-    #     return payload.replace(b'\x00', b'')
-
+    #def decode_response(self, payload):
+    #    #print("decoding: " + payload)
+    #    headers = {}
+    #    bmpi = {}
+    #    #if http response add it to list (destroy list after all http responses are delt with)
+    #    #is a http response so append it to the list
+    #    if 'at+rsi_snd' in payload:
+    #        print("http response")
+    #        print(payload)      
+    #        http_list.append(payload)
+    #    #payload is not a http response (end of the http responses and list is full)
+    #    else:
+    #        #if list is empty it means the previous payload was not http response
+    #        #we should decode this response as an AT command
+    #        if not http_list:
+    #            print("AT Command")
+    #            print(payload)
+    #            payload.rstrip('\r\n')
+    #            bmpi['at_command'] = payload
+#
+    #        #if the list is not empty, it means previous payload was a http response
+    #        #we need to handle the http list
+    #        else:
+    #            #list is full so decode response
+    #            print("http_list")
+    #            print(http_list)
+    #            for i in http_list:
+    #                resp = i.split("\r\n\r\n")
+    #                body = resp[-1:]
+    #                fields = resp[:-1]
+    #                #contains headers it means its the status
+    #                if len(fields) > 0:
+    #                    fields = fields[0].split("\r\n")
+    #                    fields = fields[1:] #ignore the HTTP/1.1 200 OK
+    #                    for field in fields:
+    #                        key,value = field.split(':')#split each line by http field name and value     
+    #                        headers[key] = value
+    #                    #extract serialnumber date and status. last entry is bmpi status
+    #                    body = body[0].split("\r\n")
+    #                    body = body[:-1]           
+    #                    version_date, serialnum, state = body[0].split(";")
+    #                    version,month,day,year = version_date.split(" ")
+    #                    items = state.split("X")
+    #                    bmpi['version'] = version
+    #                    bmpi["date"] = (day + " " + month + " " + year)
+    #                    bmpi["serialnum"] = serialnum
+    #                    bmpi["clock"] = items[1]
+    #                    bmpi["unit"] = items[2]
+    #                    bmpi["unknown3"] = items[3]
+    #                    bmpi["target_temp"] = items[4]
+    #                    bmpi["actual_temp"] = items[5]
+    #                    bmpi["target_time"] = items[6]
+    #                    bmpi["elapsed_time"] = items[7]
+#
+    #    http_list.clear()
+    #    return json.dumps(bmpi)

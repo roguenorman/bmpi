@@ -148,3 +148,50 @@ def decode__response(payload):
 
     http_list.clear()
     return json.dumps(bmpi)
+
+
+    # #decodes http response from BM.
+    # def decode_response(self, payload):
+    #     headers = {}
+    #     bmpi = {}
+    #     for i in self.http_list:
+    #         resp = i.split("\r\n\r\n")
+           
+    #         body = resp[-1:]
+    #         fields = resp[:-1]
+    #         #contains headers it means its the status
+    #         if len(fields) > 0:
+
+    #             fields = fields[0].split("\r\n")
+    #             fields = fields[1:] #ignore the HTTP/1.1 200 OK
+    #             for field in fields:
+    #                 key,value = field.split(':')#split each line by http field name and value     
+    #                 headers[key] = value
+    #             #extract serialnumber date and status. last entry is bmpi status
+    #             body = body[0].split("\r\n")
+    #             body = body[:-1]           
+    #             version_date, serialnum, state = body[0].split(";")
+    #             version,month,day,year = version_date.split(" ")
+
+
+    #             items = state.split("X")
+    #             bmpi['version'] = version
+    #             bmpi["date"] = (day + " " + month + " " + year)
+    #             bmpi["serialnum"] = serialnum
+    #             bmpi["clock"] = items[1]
+    #             bmpi["unit"] = items[2]
+    #             bmpi["unknown3"] = items[3]
+    #             bmpi["target_temp"] = items[4]
+    #             bmpi["actual_temp"] = items[5]
+    #             bmpi["target_time"] = items[6]
+    #             bmpi["elapsed_time"] = items[7]
+
+    #     return json.dumps(bmpi)
+
+
+    # #takes bytes with escapebytes and replaces it with \r\n
+    # def byteUnstuff(self, payload):
+    #     return payload.replace(b'\xdb\xdc', b'\r\n')
+
+    # def removeNullBytes():
+    #     return payload.replace(b'\x00', b'')

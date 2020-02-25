@@ -1,8 +1,9 @@
-from flask import Blueprint, render_template, Response, make_response
-import serial
-from time import sleep
+from flask import Blueprint, render_template, Response, request, make_response, stream_with_context
 from flask import current_app as app
-from bmpi import logger
+from queue import Empty
+from time import sleep
+import serial
+
 
 terminal_bp = Blueprint('terminal', __name__)
 
@@ -19,29 +20,24 @@ def byteUnstuff(payload):
 
 def checkQueue():
     while True:
-        if not logger.logger_input_queue.empty():
-            payload = logger.logger_input_queue.get()
-            #if response is data
-            #if b'at+rsi_snd=1,0,0,0,' in payload:
-                #print('response is data')
-                #payload = byteUnstuff(payload)
-                #payload = payload.decode('iso-8859-1')
-                #payload = payload.replace('\x00', '')
-                #try:
-                    #payload = payload.split('at+rsi_snd=1,0,0,0,')[1]
-                    #print('Start of data')
-                    #print(payload)
-                    #print('End of data')
-                #except Exception:
-                    #pass
-                #format for SSE
+        if not app.wifi_srv.log_input_queue.empty():
+            payload = app.wifi_srv.log_input_queue.get()
+            #format for SSE
             payload = "data: "+payload+"\n\n"
+            print(payload)
             yield payload
+    #try:  payload = app.wifi_srv.log_input_queue.get_nowait()
+    #except Empty:
+    #    pass
+    #else:
+    #    #format for SSE
+    #    payload = "data: "+payload+"\n\n"
+    #    yield payload
 
         
 @terminal_bp.route('/terminal_stream')
 def terminal_request():
-    newresponse = Response(checkQueue(), mimetype="text/event-stream")
+    newresponse = Response(stream_with_context(checkQueue()), mimetype="text/event-stream")
     newresponse.headers.add('Access-Control-Allow-Origin', '*')
     newresponse.headers.add('Content-Type', 'text/event-stream')
     return newresponse
