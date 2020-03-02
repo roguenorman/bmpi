@@ -24,7 +24,7 @@ def checkQueue():
             payload = app.wifi_srv.log_input_queue.get()
             #format for SSE
             payload = "data: "+payload+"\n\n"
-            print(payload)
+            print("terminal payload is: " + payload)
             yield payload
     #try:  payload = app.wifi_srv.log_input_queue.get_nowait()
     #except Empty:

@@ -11,10 +11,10 @@
 <meta content="text/html;charset=ISO-8859-1" http-equiv=" content-type">
 <title>BMPi</title>
 </head>
-    <table style="text-align: left; width: 380px; height: 240px; font-family: DIN;" bgcolor="#ffffff" border="1" frame="box">
+    <table style="text-align: left; width: 730px; height: 240px; font-family: DIN;" bgcolor="#ffffff" border="1" frame="box">
         <tbody>
         <tr style="text-align: center; height: 20px">
-            <td colspan="2" height="40"height="10" >ip address</td>
+            <td id="ipaddr" colspan="2" height="40"height="10" >ip address</td>
             <td height="10" >P/H</td>
         </tr>
         <tr height="40" style="text-align: center;">
@@ -43,17 +43,19 @@
         </tr>
         <script>
             var tempContainer = document.getElementById("temp");
-        
+            var ipContainer = document.getElementById("ipaddr");
+
             const eventSource = new EventSource("/stream");
             eventSource.onmessage = function(e) {
                 console.log(e.data)
                 const obj = JSON.parse(e.data);
-                console.log(obj.target_temp)
-        
-                tempContainer.innerHTML = obj.target_temp + '<br>';
+                if(typeof obj.target_temp !== "undefined")
+                    tempContainer.innerHTML = obj.target_temp + '<br>';
+                if(typeof obj.ipaddr !== "undefined")
+                    ipContainer.innerHTML = obj.ipaddr + '<br>';
             };
             eventSource.onerror = function(err) {
-            console.error("EventSource failed:", err);
+                console.error("EventSource failed:", err);
             };    
         </script>
         <tbody>

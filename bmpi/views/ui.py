@@ -9,19 +9,26 @@ def sendCommand(data_stream):
     value = b'AT+RSI_READ\x01\x27\x00GET '+ data_stream.encode('ascii') + b' HTTP/1.1 Host: 172.16.20.48\r\n'
     app.wifi_srv.sendToSerial(value)
     
-    if data_stream == "ui.txt":
-        app.wifi_srv.sendToSerial(b'AT+RSI_READ\x01\x27\x00GET /ui.txt HTTP/1.1 Host: 172.16.20.48\r\n')
-    if data_stream == "bm.txt":
-        app.wifi_srv.sendToSerial(b'AT+RSI_READ\x01\x27\x00GET /bm.txt HTTP/1.1 Host: 172.16.20.48\r\n')
+    #if data_stream == "ui.txt":
+    #    app.wifi_srv.sendToSerial(b'AT+RSI_READ\x01\x27\x00GET /ui.txt HTTP/1.1 Host: 172.16.20.48\r\n')
+    #if data_stream == "bm.txt":
+    #    app.wifi_srv.sendToSerial(b'AT+RSI_READ\x01\x27\x00GET /bm.txt HTTP/1.1 Host: 172.16.20.48\r\n')
 
 
 def checkQueue():
-    try:  payload = app.wifi_srv.log_input_queue.get_nowait()
-    except Empty:
-        pass
-    else:
-        payload = "data: "+payload+"\n\n"
-        yield payload
+    while True:
+        if not app.wifi_srv.log_input_queue.empty():
+            payload = app.wifi_srv.log_input_queue.get()
+            #format for SSE
+            payload = "data: "+payload+"\n\n"
+            print("ui payload is :" + payload)
+            yield payload
+    #try:  payload = app.wifi_srv.log_input_queue.get_nowait()
+    #except Empty:
+    #    pass
+    #else:
+    #    payload = "data: "+payload+"\n\n"
+    #    yield payload
 
 
 @ui_bp.route('/stream')
