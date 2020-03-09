@@ -8,6 +8,11 @@ from queue import Queue, Empty
 from bmpi import serialDriver
 from flask import request
 
+import numpy as np
+import binascii
+from PIL import Image
+import io
+
 debug = True
 interface = "wlan0"
 http_list = list()
@@ -149,13 +154,23 @@ class wifiServer():
         except Empty:
             print('no output yet')
         else:
+            print("serial data")
+            print(serialData)
             #takes bytes with escapebytes and replaces it with \r\n
             serialData = serialData.replace(b'\xdb\xdc', b'\r\n')
             #decode from bytes to str
+            #if b'BM'in serialData:
+                #self.parse_bmp(serialData)
+                #return
             serialData = serialData.decode()
             self.parse_response(serialData)
             #send AT command back to BM
             self.command(serialData.rstrip('\r\n'))()
+
+#ui.txt
+#bm.html
+#index.html
+#start.bmp
 
     #TODO clean up the list > dict > json
     def parse_response(self, serialData):
@@ -217,15 +232,59 @@ class wifiServer():
                 self.recipeCount = None
                 self.http_list.clear()
         #AT command
+
+
         #TODO fix this with the new function format
         else:
             #remove EOL characters
             serialData.rstrip()
             data = {"at_command": serialData}
             jsonData = json.dumps(data)
-            self.sendToLogQueue(jsonData)
+            #self.sendToLogQueue(jsonData)
 
 
+
+    def parse_bmp(self, serialData):
+        print("bmp")
+        if "bmp" in self.requestUri:
+            if b'at+rsi_snd' in serialData:
+                print("requestUri")
+                print(self.requestUri)
+                #http list is empty so it must be the first response from BM
+                #if not self.http_list:
+                print("1st response for bmp")
+                print(serialData)
+                header, bmp = serialData.split(b'\r\n\r\n', 1)
+                bmp = bmp.rstrip()
+                #bmp = bmp.lstrip(b'BM')
+                bmp = bmp.hex()
+                print('hex')
+                print(bmp)
+                with open('test.bmp', 'wb') as bmp_file:
+                    bmp_file.write(io.BytesIO(bytearray.fromhex(bmp)))
+
+                img = Image.open(io.BytesIO(bytearray.fromhex(bmp)), 'r') # 1 L P RGB
+                #img.save('base.bmp')
+                print(img)
+                img.show()
+
+                num_array = np.asarray(bmp)
+                print(num_array)
+                binascii.unhexlify(bmp) # return binary data
+
+                #is it base64 encoded???
+
+            
+            #else:
+            #    if b'at+rsi_snd' in serialData:
+            #        print("2nd response for bmp")
+            #        bmp = serialData.split('\r\n')
+            #        print("bmp")
+            #        print(serialData)
+            #        first, bmp = serialData.split('\r\n\r\n', 1)
+            #        self.http_list.extend((first, bmp))
+            #        array2 = np.asarray(bmp)
+            #        self.requestUri = ""
         #return jsonData
 
     #decode the http response into json and send to log queue

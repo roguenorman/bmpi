@@ -3,6 +3,7 @@ from flask import current_app as app
 from flask import Flask
 from queue import Empty
 
+
 ui_bp = Blueprint('ui', __name__)
 
 def sendCommand(data_stream):
@@ -23,13 +24,6 @@ def checkQueue():
             payload = "data: "+payload+"\n\n"
             print("ui payload is :" + payload)
             yield payload
-    #try:  payload = app.wifi_srv.log_input_queue.get_nowait()
-    #except Empty:
-    #    pass
-    #else:
-    #    payload = "data: "+payload+"\n\n"
-    #    yield payload
-
 
 @ui_bp.route('/stream')
 def stream():
