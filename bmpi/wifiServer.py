@@ -12,6 +12,7 @@ import numpy as np
 import binascii
 from PIL import Image
 import io
+from io import StringIO
 
 debug = True
 interface = "wlan0"
@@ -158,10 +159,11 @@ class wifiServer():
             print(serialData)
             #takes bytes with escapebytes and replaces it with \r\n
             serialData = serialData.replace(b'\xdb\xdc', b'\r\n')
-            #decode from bytes to str
-            #if b'BM'in serialData:
-                #self.parse_bmp(serialData)
-                #return
+
+            if b'BM'in serialData:
+                self.parse_bmp(serialData)
+                return
+            #serialData = serialData.decode('iso-8859-1')
             serialData = serialData.decode()
             self.parse_response(serialData)
             #send AT command back to BM
@@ -248,29 +250,23 @@ class wifiServer():
         print("bmp")
         if "bmp" in self.requestUri:
             if b'at+rsi_snd' in serialData:
-                print("requestUri")
-                print(self.requestUri)
-                #http list is empty so it must be the first response from BM
-                #if not self.http_list:
-                print("1st response for bmp")
-                print(serialData)
+                #serialData.decode('iso-8859-1')
+                #print(serialData)
                 header, bmp = serialData.split(b'\r\n\r\n', 1)
+                #print(bmp)
                 bmp = bmp.rstrip()
-                #bmp = bmp.lstrip(b'BM')
-                bmp = bmp.hex()
-                print('hex')
+                #print('smallhex')
+                hex = bmp.hex()
                 print(bmp)
-                with open('test.bmp', 'wb') as bmp_file:
-                    bmp_file.write(io.BytesIO(bytearray.fromhex(bmp)))
+                #Image.frombytes()
 
-                img = Image.open(io.BytesIO(bytearray.fromhex(bmp)), 'r') # 1 L P RGB
+
+                #img = Image.open(io.BytesIO(bytearray.fromhex(hex)), 'r') # 1 L P RGB
                 #img.save('base.bmp')
-                print(img)
-                img.show()
-
-                num_array = np.asarray(bmp)
-                print(num_array)
-                binascii.unhexlify(bmp) # return binary data
+                #print(img)
+                #num_array = np.asarray(bmp)
+                #print(num_array)
+                #binascii.unhexlify(bmp) # return binary data
 
                 #is it base64 encoded???
 

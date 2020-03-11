@@ -8,40 +8,61 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
 <head>
-<meta content="text/html;charset=ISO-8859-1" http-equiv=" content-type">
-<title>BMPi</title>
+    <title>BMPi</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
-    <table style="text-align: left; width: 730px; height: 240px; font-family: DIN;" bgcolor="#ffffff" border="1" frame="box">
+    <table class="screen">
         <tbody>
-        <tr style="text-align: center; height: 20px">
-            <td id="ipaddr" colspan="2" height="40"height="10" >ip address</td>
-            <td height="10" >P/H</td>
-        </tr>
-        <tr height="40" style="text-align: center;">
-            <td colspan="2" >BMPi</td>
-            <td colspan="2" >BMPi</td>
-        </tr>
-        <tr colspan="2" height="40" style="text-align: center;">
-            <td colspan="2">Temp</td>
-            <td id="temp" colspan="2">50C</td>
-        </tr>  
-        <tr height="40" style="text-align: center;">
-            <td>button</td>
-            <td>button</td>
-            <td>button</td>
-            <td>button</td>
-        </tr>  
-    <table style="text-align: left; width: 380px;" border="0">
-        <tr>
-            <form method="post" action="/ui">
-                <button type="submit" name="key" value="/bm.txt?k=1"><img src="static/circle-96.png" alt="key 1"></button>
-                <button type="submit" name="key" value="/bm.txt?k=2"><img src="static/circle-96.png" alt="key 2"></button>
-                <button type="submit" name="key" value="/bm.txt?k=3"><img src="static/circle-96.png" alt="key 3"></button>
-                <button type="submit" name="key" value="/bm.txt?k=4"><img src="static/circle-96.png" alt="key 4"></button>
-                <button type="submit" name="key" value="/rz.txt"><img src="static/circle-96.png" alt="rz"></buttom>
-                <button type="submit" name="key" value="/start.bmp"><img src="static/circle-96.png" alt="rz"></buttom>
-            </form>
-        </tr>
+            <tr>
+                <td id="ipaddr" colspan="2" height="40"height="10" >ip address</td><td height="10" >P/H</td>
+            </tr>
+            <tr>
+                <td colspan="2" >BMPi</td><td colspan="2" >BMPi</td>
+            </tr>
+            <tr>
+                <td colspan="2">Temp</td><td id="temp" colspan="2">50C</td>
+            </tr>
+            <tfoot>
+            <tr>
+                <form method="post" action="/ui">
+                    <td><button type="submit" name="key" value="/bm.txt?k=1"><img src="static/settings-24.svg" alt="key 1" id='settings' ></button></td>
+                    <td><button type="submit" name="key" value="/bm.txt?k=2"><img src="static/hand-24.svg" alt="key 2" id='hand' ></button></td>
+                    <td><button type="submit" name="key" value="/bm.txt?k=3"><img src="static/play-24.svg" alt="key 3" id='play' ></button></td>
+                    <td><button type="submit" name="key" value="/bm.txt?k=4"><img src="static/menu-24.svg" alt="key 4" id='menu' ></button></td>
+                </form>
+            </tr>
+            </tfoot>
+        </tbody>
+    </table>
+
+    <div class="screen">
+        <div class="divTableHeading">
+            <div class="divTableRow">
+                <div class="divTableHead">head1</div>
+                <div class="divTableHead">head2</div>
+                <div class="divTableHead">head3</div>
+            </div>
+        </div>
+        <div class="divTableBody">
+        <div class="divTableRow">
+        <div class="divTableCell">cell1_1</div>
+        <div class="divTableCell">cell2_1</div>
+        <div class="divTableCell">cell3_1</div>
+        </div>
+        <div class="divTableRow">
+        <div class="divTableCell">cell1_2</div>
+        <div class="divTableCell">cell2_2</div>
+        <div class="divTableCell">cell3_2</div>
+        </div>
+        </div>
+        <div class="divTableFoot tableFootStyle">
+        <div class="divTableRow">
+        <div class="divTableCell">foot1</div>
+        <div class="divTableCell">foot2</div>
+        <div class="divTableCell">foot3</div>
+        </div>
+        </div>
+        </div>
         <script>
             var tempContainer = document.getElementById("temp");
             var ipContainer = document.getElementById("ipaddr");
@@ -60,5 +81,5 @@
                 console.error('EventSource failed:', err);
             };    
         </script>
-        <tbody>
+
 {% endblock %}
