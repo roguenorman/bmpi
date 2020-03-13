@@ -7,6 +7,7 @@ from email.parser import BytesParser
 from queue import Queue, Empty
 from bmpi import serialDriver
 from flask import request
+import chardet
 
 import numpy as np
 import binascii
@@ -69,8 +70,8 @@ class wifiServer():
     def send_fw(self):
         self.sendToSerial(b'OK 4.8.4\r\n')
     
-    #first command to configure band. 0 = 2.4Ghz
-    def select_band(self):
+    #first command to configure band. 0 = 2.4Ghz. 1 = 5 GHz
+    def select_band(self, band):
         self.sendToSerial(b'OK\r\n')
 
     #executed after selecting the band
@@ -86,27 +87,36 @@ class wifiServer():
     #0x02 – WPA2
     #0x03 – WEP
         
-    def ssid_scan(self):
+#    def ssid_scan(self):
+#        self.ssid = b'OK Data\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x14\r\n'
+#        self.sendToSerial(self.ssid)
+
+    def ssid_scan(self, params):
+        #found a sid
+        if ',' in params:
+            channel, ssid = params.split(',')
+            ssid = ssid.lstrip()
+            #TODO send correct ssid
         self.ssid = b'OK Data\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x14\r\n'
         self.sendToSerial(self.ssid)
-
-    def data_scan(self):
-        self.ssid_scan()
     
     #configures infrastructure mode
-    def infra_mode(self):
+    def infra_mode(self, params):
         self.sendToSerial(b'OK\r\n')
     
     #configures the auth mode
-    def auth_mode(self):
+    def auth_mode(self, params):
         self.sendToSerial(b'OK\r\n')
     
     #SSID name, TxRate, TxPower
-    def join_ssid(self):
+    def join_ssid(self, params):
+        ssid, txRate, txPower = params.split(',')
+        ssid = ssid.lstrip()
         self.sendToSerial(b'OK\r\n')
     
     #DHCP_MODE, IP address, SUBNET, GATEWAY
-    def config_ip(self):
+    def config_ip(self, params):
+        #params dont matter. just send it back the rpi ip address, subnet and gateway
         self.dhcp = b'OK\xb8\x27\xeb\xbd\x63\x18\xac\x10\x14.\xff\xff\xff\x00\xac\x10\x14\xfe\r\n'
         self.sendToSerial(self.dhcp)
     
@@ -116,30 +126,30 @@ class wifiServer():
         rssi = b'OK\x1f\r\n' #iwlist scan
         self.sendToSerial(rssi)
     
-    def open_socket(self):
+    def open_socket(self, params):
+        #params should always be 80
         socket = b'OK\x01\r\n'
         self.sendToSerial(socket)
 
-    def close_socket(self):
-        self.sendToSerial(b'OK\r\n')
     
-    # TODO split command at '='
+    #TODO receive params and send them to the functions too
     def command(self, command):
         return {
             'at+rsi_mac?': self.send_mac,
             'at+rsi_fwversion?': self.send_fw,
             'at+rsi_reset': self.send_ok,
-            'at+rsi_band=0': self.select_band,
+            'at+rsi_band': self.select_band,
             'at+rsi_init': self.init,
-            'at+rsi_scan=0': self.ssid_scan,
-            'at+rsi_scan=0, Data': self.data_scan,
-            'at+rsi_network=INFRASTRUCTURE': self.infra_mode,
-            'at+rsi_authmode=4': self.auth_mode,
-            'at+rsi_join= Data,0,2': self.join_ssid,
-            'at+rsi_ipconf=1,0,0': self.config_ip,
+            'at+rsi_scan': self.ssid_scan,
+            #'at+rsi_scan': self.data_scan,
+            'at+rsi_network': self.infra_mode,
+            'at+rsi_authmode': self.auth_mode,
+            'at+rsi_join': self.join_ssid,
+            'at+rsi_ipconf': self.config_ip,
             'at+rsi_rssi?': self.rssi,
-            'at+rsi_ltcp=80': self.open_socket,
-            'at+rsi_cls=1': self.close_socket
+            'at+rsi_ltcp': self.open_socket,
+            'at+rsi_cls': self.close_socket,
+            'at+rsi_snd': self.save_data,
         }.get(command, lambda: "Invalid command")
 
     def sendToSerial(self, payload):
@@ -155,31 +165,52 @@ class wifiServer():
         except Empty:
             print('no output yet')
         else:
-            print("serial data")
-            print(serialData)
             #takes bytes with escapebytes and replaces it with \r\n
             serialData = serialData.replace(b'\xdb\xdc', b'\r\n')
+            serialData = serialData.decode('iso-8859-1')
+            cmd = serialData.rstrip('\r\n')
+            #command has parameters
+            if '=' in cmd: # can have a = in the params. need ot fix that
+                cmd, params = serialData.split('=', 1)
+                func = self.command(cmd)
+                func(params)
+            else:
+                #select function based on AT command
+                func = self.command(cmd)
+                func()
 
-            if b'BM'in serialData:
-                self.parse_bmp(serialData)
-                return
-            #serialData = serialData.decode('iso-8859-1')
-            serialData = serialData.decode()
-            self.parse_response(serialData)
-            #send AT command back to BM
-            self.command(serialData.rstrip('\r\n'))()
 
-#ui.txt
-#bm.html
-#index.html
-#start.bmp
+    #save data from BM
+    def save_data(self, data):
+        #remove unwanted 
+        data = data.replace('1,0,0,0,', '')
+        #save the data into a list
+        self.http_list.append(data)
+        self.sendToSerial(b'OK\r\n')
+        
 
-    #TODO clean up the list > dict > json
+    #parse saved data when we get a close socket
+    def close_socket(self, params):
+        #parse list can we ues html parser?
+        #another command has caused a close socket
+        if self.http_list:
+            html = ''
+            html = html.join(self.http_list)
+            html = html
+            print(html)
+            #print(self.http_list)
+            self.http_list.clear()
+        self.sendToSerial(b'OK\r\n')
+
+
+    #TODO clean up the list > dict > json.
+    #TODO do we need the if /bmtxt? we should be able to just receeive anything and depending on the AT command, parse it properly. when the stream is finished, it will close. fill up a list and when we get close, parse the list
     def parse_response(self, serialData):
         if "/bm.txt?" in self.requestUri and 'at+rsi_snd' in serialData:
             bmpi = {}
+            print('parsing: ' + serialData)
             headers, body = serialData.split('\r\n\r\n', 1)
-            versionDate, serialNum, state = body.split(';')
+            versionDate, serialNum, state = body.split(';', 2)
             version,month,day,year = versionDate.split(" ")
             request_line, headers_alone = headers.split('\r\n', 1) #request_line will have 200OK
             #encode to bytes so we can parse the headers_alone
@@ -244,8 +275,6 @@ class wifiServer():
             jsonData = json.dumps(data)
             #self.sendToLogQueue(jsonData)
 
-
-
     def parse_bmp(self, serialData):
         print("bmp")
         if "bmp" in self.requestUri:
@@ -282,6 +311,19 @@ class wifiServer():
             #        array2 = np.asarray(bmp)
             #        self.requestUri = ""
         #return jsonData
+
+
+#ui.txt - returns headers and serial number
+#bm.html
+#bm.txt?k=1 presses key and returns some data such as SN and recipe
+#index.html - retuns a JS redirect to spidel
+#start.bmp
+#https://www.myspeidel.com/steuerung/index.php?l=1&i=172.16.20.96
+
+#settings doesn work on wifi module
+#recipe does not work on wifi module
+#recipe uoload on wifi module
+# recipe sync removes all and adds all
 
     #decode the http response into json and send to log queue
     #list will have 4 entires
@@ -427,3 +469,23 @@ class wifiServer():
 #
     #    http_list.clear()
     #    return json.dumps(bmpi)
+
+
+#        def command(self, command):
+#        return {
+#            'at+rsi_mac?': self.send_mac,
+#            'at+rsi_fwversion?': self.send_fw,
+#            'at+rsi_reset': self.send_ok,
+#            'at+rsi_band=0': self.select_band,
+#            'at+rsi_init': self.init,
+#            'at+rsi_scan=0': self.ssid_scan,
+#            'at+rsi_scan=0, Data': self.data_scan,
+#            'at+rsi_network=INFRASTRUCTURE': self.infra_mode,
+#            'at+rsi_authmode=4': self.auth_mode,
+#            'at+rsi_join= Data,0,2': self.join_ssid,
+#            'at+rsi_ipconf=1,0,0': self.config_ip,
+#            'at+rsi_rssi?': self.rssi,
+#            'at+rsi_ltcp=80': self.open_socket,
+#            'at+rsi_cls=1': self.close_socket,
+#            'at+rsi_snd=1': self.send_ok
+#        }.get(command, lambda: "Invalid command")

@@ -1,5 +1,5 @@
 RPi.GPIO
 flask
 pyserial
-numpy
+#numpy # for bmp
 #sudo apt-get install libatlas-base-dev # needed for numpy to work
