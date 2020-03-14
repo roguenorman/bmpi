@@ -166,6 +166,7 @@ class wifiServer():
             print('no output yet')
         else:
             #takes bytes with escapebytes and replaces it with \r\n
+            print(serialData)
             serialData = serialData.replace(b'\xdb\xdc', b'\r\n')
             serialData = serialData.decode('iso-8859-1')
             cmd = serialData.rstrip('\r\n')
@@ -266,7 +267,6 @@ class wifiServer():
                 self.http_list.clear()
         #AT command
 
-
         #TODO fix this with the new function format
         else:
             #remove EOL characters
@@ -275,48 +275,13 @@ class wifiServer():
             jsonData = json.dumps(data)
             #self.sendToLogQueue(jsonData)
 
-    def parse_bmp(self, serialData):
-        print("bmp")
-        if "bmp" in self.requestUri:
-            if b'at+rsi_snd' in serialData:
-                #serialData.decode('iso-8859-1')
-                #print(serialData)
-                header, bmp = serialData.split(b'\r\n\r\n', 1)
-                #print(bmp)
-                bmp = bmp.rstrip()
-                #print('smallhex')
-                hex = bmp.hex()
-                print(bmp)
-                #Image.frombytes()
 
-
-                #img = Image.open(io.BytesIO(bytearray.fromhex(hex)), 'r') # 1 L P RGB
-                #img.save('base.bmp')
-                #print(img)
-                #num_array = np.asarray(bmp)
-                #print(num_array)
-                #binascii.unhexlify(bmp) # return binary data
-
-                #is it base64 encoded???
-
-            
-            #else:
-            #    if b'at+rsi_snd' in serialData:
-            #        print("2nd response for bmp")
-            #        bmp = serialData.split('\r\n')
-            #        print("bmp")
-            #        print(serialData)
-            #        first, bmp = serialData.split('\r\n\r\n', 1)
-            #        self.http_list.extend((first, bmp))
-            #        array2 = np.asarray(bmp)
-            #        self.requestUri = ""
-        #return jsonData
 
 
 #ui.txt - returns headers and serial number
 #bm.html
 #bm.txt?k=1 presses key and returns some data such as SN and recipe
-#index.html - retuns a JS redirect to spidel
+#index.html - retuns a JS redirect to speidel
 #start.bmp
 #https://www.myspeidel.com/steuerung/index.php?l=1&i=172.16.20.96
 
@@ -325,26 +290,7 @@ class wifiServer():
 #recipe uoload on wifi module
 # recipe sync removes all and adds all
 
-    #decode the http response into json and send to log queue
-    #list will have 4 entires
-#    def decode_http(self):
-#        bmpi = {}
-#        #print(self.http_list)
-#        request_line, headers_alone = self.http_list[0].split('\r\n', 1) #request_line will have 200OK
-#        #encode to bytes so we can parse the headers_alone
-#        headers_alone = headers_alone.encode()
-#        headers = BytesParser().parsebytes(headers_alone)
-#        bmpi['version'] = self.http_list[1]
-#        bmpi['serialnum'] = self.http_list[2]
-#        if "/bm.txt?" in self.requestUri:
-#            bmpi['state'] = self.http_list[3]
-#        elif "/rz.txt" in self.requestUri:
-#            bmpi['rz'] = self.http_list[3]
-#        #print(bmpi)
-#        #clean up 
-#        self.requestUri = ""
-#        self.http_list.clear()
-#        return json.dumps(bmpi)
+
 
 #bm.txt
 #[b'at+rsi_snd=1,0,0,0,HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Type: text/plain\r\nCache-Control: no-cache\r\nAccess-Control-Allow-Origin: *
@@ -376,116 +322,3 @@ class wifiServer():
 # 2X60X65X60X75X10X78X5X78X0X78X0X60X100X40X0X0X0X0X0.Blck IPA\r\n
 # 3X65X66X60X66X0X73X0X78X0X78X10X60X100X60X20X0X0X0X0.Recipe 4\r\n'
 
-
-
-#    #extracts the status from the list
-#    #accepts list, returns json
-#    def decode(self, httpList):
-#        bmpi = {}
-#        headers = {}
-#        for i in httpList:
-#            resp = i.split("\r\n\r\n")
-#            body = resp[-1:]
-#            fields = resp[:-1]
-#            #contains headers it means its the /bm.txt
-#            if len(fields) > 0:
-#                fields = fields[0].split("\r\n")
-#                fields = fields[1:] #ignore the HTTP/1.1 200 OK
-#                for field in fields:
-#                    key,value = field.split(':')#split each line by http field name and value     
-#                    headers[key] = value
-#                #extract serialnumber date and status. last entry is bmpi status
-#                body = body[0].split("\r\n")
-#                body = body[:-1]           
-#                version_date, serialnum, state = body[0].split(";")
-#                version,month,day,year = version_date.split(" ")
-#                items = state.split("X")
-#                bmpi['version'] = version
-#                bmpi["date"] = (day + " " + month + " " + year)
-#                bmpi["serialnum"] = serialnum
-#                bmpi["clock"] = items[1]
-#                bmpi["unit"] = items[2]
-#                bmpi["unknown3"] = items[3]
-#                bmpi["target_temp"] = items[4]
-#                bmpi["actual_temp"] = items[5]
-#                bmpi["target_time"] = items[6]
-#                bmpi["elapsed_time"] = items[7] 
-#
-#            self.http_list.clear()
-#            return json.dumps(bmpi)
-    #def decode_response(self, payload):
-    #    #print("decoding: " + payload)
-    #    headers = {}
-    #    bmpi = {}
-    #    #if http response add it to list (destroy list after all http responses are delt with)
-    #    #is a http response so append it to the list
-    #    if 'at+rsi_snd' in payload:
-    #        print("http response")
-    #        print(payload)      
-    #        http_list.append(payload)
-    #    #payload is not a http response (end of the http responses and list is full)
-    #    else:
-    #        #if list is empty it means the previous payload was not http response
-    #        #we should decode this response as an AT command
-    #        if not http_list:
-    #            print("AT Command")
-    #            print(payload)
-    #            payload.rstrip('\r\n')
-    #            bmpi['at_command'] = payload
-#
-    #        #if the list is not empty, it means previous payload was a http response
-    #        #we need to handle the http list
-    #        else:
-    #            #list is full so decode response
-    #            print("http_list")
-    #            print(http_list)
-    #            for i in http_list:
-    #                resp = i.split("\r\n\r\n")
-    #                body = resp[-1:]
-    #                fields = resp[:-1]
-    #                #contains headers it means its the status
-    #                if len(fields) > 0:
-    #                    fields = fields[0].split("\r\n")
-    #                    fields = fields[1:] #ignore the HTTP/1.1 200 OK
-    #                    for field in fields:
-    #                        key,value = field.split(':')#split each line by http field name and value     
-    #                        headers[key] = value
-    #                    #extract serialnumber date and status. last entry is bmpi status
-    #                    body = body[0].split("\r\n")
-    #                    body = body[:-1]           
-    #                    version_date, serialnum, state = body[0].split(";")
-    #                    version,month,day,year = version_date.split(" ")
-    #                    items = state.split("X")
-    #                    bmpi['version'] = version
-    #                    bmpi["date"] = (day + " " + month + " " + year)
-    #                    bmpi["serialnum"] = serialnum
-    #                    bmpi["clock"] = items[1]
-    #                    bmpi["unit"] = items[2]
-    #                    bmpi["unknown3"] = items[3]
-    #                    bmpi["target_temp"] = items[4]
-    #                    bmpi["actual_temp"] = items[5]
-    #                    bmpi["target_time"] = items[6]
-    #                    bmpi["elapsed_time"] = items[7]
-#
-    #    http_list.clear()
-    #    return json.dumps(bmpi)
-
-
-#        def command(self, command):
-#        return {
-#            'at+rsi_mac?': self.send_mac,
-#            'at+rsi_fwversion?': self.send_fw,
-#            'at+rsi_reset': self.send_ok,
-#            'at+rsi_band=0': self.select_band,
-#            'at+rsi_init': self.init,
-#            'at+rsi_scan=0': self.ssid_scan,
-#            'at+rsi_scan=0, Data': self.data_scan,
-#            'at+rsi_network=INFRASTRUCTURE': self.infra_mode,
-#            'at+rsi_authmode=4': self.auth_mode,
-#            'at+rsi_join= Data,0,2': self.join_ssid,
-#            'at+rsi_ipconf=1,0,0': self.config_ip,
-#            'at+rsi_rssi?': self.rssi,
-#            'at+rsi_ltcp=80': self.open_socket,
-#            'at+rsi_cls=1': self.close_socket,
-#            'at+rsi_snd=1': self.send_ok
-#        }.get(command, lambda: "Invalid command")
