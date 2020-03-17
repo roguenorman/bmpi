@@ -1,21 +1,28 @@
 
 /* screen */
 .screen{
-width: 320px;
-height: 240px;
+width: 364px;
+height: 280px;
 background: #EDEDED;
 border-width: 20px;
 border-style: solid;
 border-color: #333333;
+border-collapse: collapse;
 }
 
 /* buttons */
 .buttons{
-    width: 320px;
+    width: 364px;
     background: #333333;
     border-width: 0px;
     border-style: solid;
+    border-color: #d11414;
 
 }
 
 
+
+div{
+    border: 0;
+    border-color: #d11414;
+  }

@@ -36,12 +36,12 @@ def ui():
         if request.form.getlist("key")[0] == 'OK':
             app.wifi_srv.sendToSerial(b'OK\r\n')
             print('OK')
-            return render_template('ui.html', title='UI')
+            return render_template('ui.html', title='UI', iframe='start')
         app.wifi_srv.requestUri = request.form.getlist("key")[0]
         sendCommand(request.form.getlist("key")[0])
         print('POST')
         return redirect(url_for('.ui'))
         #return render_template('ui.html', title='UI')
     else:
-            return render_template('ui.html', title='UI')
+            return render_template('ui.html', title='UI', iframe='start')
 

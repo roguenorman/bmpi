@@ -131,6 +131,11 @@ class wifiServer():
         socket = b'OK\x01\r\n'
         self.sendToSerial(socket)
 
+    def send_data(self, data):
+        value = b'AT+RSI_READ\x01\x27\x00GET '+ data.encode('ascii') + b' HTTP/1.1 Host: 172.16.20.48\r\n'
+        self.sendToSerial(value)        
+
+
     
     #TODO receive params and send them to the functions too
     def command(self, command):
@@ -150,6 +155,7 @@ class wifiServer():
             'at+rsi_ltcp': self.open_socket,
             'at+rsi_cls': self.close_socket,
             'at+rsi_snd': self.save_data,
+            'AT+RSI_READ': self.send_data,
         }.get(command, lambda: "Invalid command")
 
     def sendToSerial(self, payload):
