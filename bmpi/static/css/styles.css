@@ -1,7 +1,7 @@
 
 /* screen */
 .screen{
-width: 364px;
+width: 340px;
 height: 280px;
 background: #EDEDED;
 border-width: 20px;
@@ -11,18 +11,55 @@ border-collapse: collapse;
 }
 
 /* buttons */
-.buttons{
-    width: 364px;
+.table-buttons{
+    width: 392px;
     background: #333333;
     border-width: 0px;
     border-style: solid;
     border-color: #d11414;
 
 }
+.button{
+    background: url("/button.bmp") no-repeat;
+    background-size: cover;
+    display: block;
+    cursor:pointer;
+    border: none;
+
+    height: 90px;
+    width: 90px;
 
 
+
+}
+.button-td {
+    width:25%;
+    text-align:center;
+}
+iframe{
+    margin: none;
+    padding: none;
+    border: none;
+    line-height: 0;
+    width: 350px; 
+    height: 270px;
+
+}
 
 div{
+    
     border: 0;
+    padding: none;
+    display: block;
+    margin: none;
+    border-style: solid;
     border-color: #d11414;
+
+  }
+
+.iframe-td{
+    margin: none;
+    padding: none;
+    border: none;
+    line-height: 0;
   }

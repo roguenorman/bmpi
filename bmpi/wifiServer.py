@@ -17,7 +17,6 @@ from io import StringIO
 
 debug = True
 interface = "wlan0"
-http_list = list()
 
 class wifiServer():
  
@@ -26,7 +25,7 @@ class wifiServer():
         self.serial_output_queue = Queue()
 
         self.log_input_queue = Queue()
-        self.http_list = list()
+        self.htmlData = None
         self.requestUri = str()
         self.recipeCount = int()
 
@@ -146,7 +145,6 @@ class wifiServer():
             'at+rsi_band': self.select_band,
             'at+rsi_init': self.init,
             'at+rsi_scan': self.ssid_scan,
-            #'at+rsi_scan': self.data_scan,
             'at+rsi_network': self.infra_mode,
             'at+rsi_authmode': self.auth_mode,
             'at+rsi_join': self.join_ssid,
@@ -177,7 +175,7 @@ class wifiServer():
             serialData = serialData.decode('iso-8859-1')
             cmd = serialData.rstrip('\r\n')
             #command has parameters
-            if '=' in cmd: # can have a = in the params. need ot fix that
+            if '=' in cmd: # can have a = in the params. need to fix that
                 cmd, params = serialData.split('=', 1)
                 func = self.command(cmd)
                 func(params)
@@ -187,26 +185,24 @@ class wifiServer():
                 func()
 
 
-    #save data from BM
+    #save html data from BM
     def save_data(self, data):
-        #remove unwanted 
+        #remove unwanted data
         data = data.replace('1,0,0,0,', '')
-        #save the data into a list
-        self.http_list.append(data)
+        #save html data to string
+        self.htmlData += data
         self.sendToSerial(b'OK\r\n')
-        
 
     #parse saved data when we get a close socket
     def close_socket(self, params):
-        #parse list can we ues html parser?
+        #parse list can we use html parser?
         #another command has caused a close socket
-        if self.http_list:
-            html = ''
-            html = html.join(self.http_list)
-            html = html
-            print(html)
-            #print(self.http_list)
-            self.http_list.clear()
+        if self.htmlData:
+            print(self.htmlData)
+            #send html to the ui
+            jsonData = json.dumps(bmpi)
+            self.sendToLogQueue(jsonData)
+            self.htmlData = None  
         self.sendToSerial(b'OK\r\n')
 
 
