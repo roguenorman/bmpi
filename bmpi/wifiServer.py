@@ -8,10 +8,7 @@ from queue import Queue, Empty
 from bmpi import serialDriver
 from flask import request
 import chardet
-
-import numpy as np
-import binascii
-from PIL import Image
+from html.parser import HTMLParser
 import io
 from io import StringIO
 
@@ -25,7 +22,7 @@ class wifiServer():
         self.serial_output_queue = Queue()
 
         self.log_input_queue = Queue()
-        self.htmlData = None
+        self.htmlData = ""
         self.requestUri = str()
         self.recipeCount = int()
 
@@ -34,10 +31,87 @@ class wifiServer():
         self.serial_bg.start()
         self.ipaddr =  self.getIp()
 
+    
+    #read line from serial queue as bytes
+    def receiveFromSerial(self):
+        try:  serialData = self.serial_output_queue.get_nowait()
+        except Empty:
+            print('no output yet')
+        else:
+            #takes bytes with escapebytes and replaces it with \r\n
+            serialData = serialData.replace(b'\xdb\xdc', b'\r\n')
+            serialData = serialData.decode('iso-8859-1')
+            cmd = serialData.rstrip('\r\n')
+            #'switch' case for what command we need to send to BM 
+            if '=' in cmd: # can have a = in the params. need to fix that
+                cmd, params = serialData.split('=', 1)
+                func = self.command(cmd)
+                func(params)
+            else:
+                #select function based on AT command
+                func = self.command(cmd)
+                func()
+
+
+    #TODO receive params and send them to the functions too
+    #selects the command taht needs to be sent to BM
+    def command(self, command):
+        return {
+            'at+rsi_mac?': self.send_mac,
+            'at+rsi_fwversion?': self.send_fw,
+            'at+rsi_reset': self.send_ok,
+            'at+rsi_band': self.select_band,
+            'at+rsi_init': self.init,
+            'at+rsi_scan': self.ssid_scan,
+            'at+rsi_network': self.infra_mode,
+            'at+rsi_authmode': self.auth_mode,
+            'at+rsi_join': self.join_ssid,
+            'at+rsi_ipconf': self.config_ip,
+            'at+rsi_rssi?': self.rssi,
+            'at+rsi_ltcp': self.open_socket,
+            'at+rsi_cls': self.close_socket,
+            'at+rsi_snd': self.save_data
+            #'AT+RSI_READ': self.send_data,
+        }.get(command, lambda: "Invalid command")
+  
+    #save html data from BM
+    def save_data(self, data):
+        #remove unwanted data and headers
+        data = data.replace('1,0,0,0,', '')
+        #save html data to string
+        self.htmlData += data
+        #send OK to BM to ack the request
+        self.sendToSerial(b'OK\r\n')
+
+    #parse saved data when we get a close socket from BM
+    def close_socket(self, params):
+        if self.htmlData:
+            #parse headers
+            headers, body = self.htmlData.split('\r\n\r\n', 1)
+            code, headers = headers.split('\r\n', 1) 
+            headers = headers.encode()
+            headers = BytesParser().parsebytes(headers)
+            val = headers['Content-Type']
+            #if headers contain text/html send to uiQueue
+            if 'text/html' in val:
+                #parse with html parser so we can remove the doc type?
+                self.sendToLogQueue(body)
+            self.htmlData = ""
+        self.sendToSerial(b'OK\r\n')
+
+
+    #sends json data to log queue
+    #TODO make is json??
+    def sendToLogQueue(self, data):
+        #remove newline and tab
+        data = data.replace('\r\n', '')
+        data = data.replace('\t', '')
+        jsonData = json.dumps(data)
+        self.log_input_queue.put(jsonData)
 
     ##functions to setup the wifi of the bmpi
     #192.168.11.140: \xc0\xa8\x01\x8c
-    
+
     #get ip address
     def getIp(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -57,11 +131,10 @@ class wifiServer():
                 
                 return socket.inet_ntoa(struct.pack("<L", int(fields[2], 16)))
     
-    
+
     #sends OK to the BM
     def send_ok(self):
         self.sendToSerial(b'OK\r\n')
-        #serial_input_queue.put(b'OK\r\n')
     
     def send_mac(self):
         self.sendToSerial(b'OK b8 27 eb bd 63 18 \r\n')
@@ -85,11 +158,8 @@ class wifiServer():
     #0x01 – WPA 1
     #0x02 – WPA2
     #0x03 – WEP
-        
-#    def ssid_scan(self):
-#        self.ssid = b'OK Data\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x14\r\n'
-#        self.sendToSerial(self.ssid)
 
+    #return the SSID list
     def ssid_scan(self, params):
         #found a sid
         if ',' in params:
@@ -130,80 +200,27 @@ class wifiServer():
         socket = b'OK\x01\r\n'
         self.sendToSerial(socket)
 
+    #send keypress to BM
     def send_data(self, data):
         value = b'AT+RSI_READ\x01\x27\x00GET '+ data.encode('ascii') + b' HTTP/1.1 Host: 172.16.20.48\r\n'
         self.sendToSerial(value)        
 
-
-    
-    #TODO receive params and send them to the functions too
-    def command(self, command):
-        return {
-            'at+rsi_mac?': self.send_mac,
-            'at+rsi_fwversion?': self.send_fw,
-            'at+rsi_reset': self.send_ok,
-            'at+rsi_band': self.select_band,
-            'at+rsi_init': self.init,
-            'at+rsi_scan': self.ssid_scan,
-            'at+rsi_network': self.infra_mode,
-            'at+rsi_authmode': self.auth_mode,
-            'at+rsi_join': self.join_ssid,
-            'at+rsi_ipconf': self.config_ip,
-            'at+rsi_rssi?': self.rssi,
-            'at+rsi_ltcp': self.open_socket,
-            'at+rsi_cls': self.close_socket,
-            'at+rsi_snd': self.save_data,
-            'AT+RSI_READ': self.send_data,
-        }.get(command, lambda: "Invalid command")
-
     def sendToSerial(self, payload):
         self.serial_input_queue.put(payload)
 
-    #sends json data to log queue
-    def sendToLogQueue(self, jsonData):
-        self.log_input_queue.put(jsonData)
-
-    #read line from queue as bytes
-    def receiveFromSerial(self):
-        try:  serialData = self.serial_output_queue.get_nowait()
-        except Empty:
-            print('no output yet')
-        else:
-            #takes bytes with escapebytes and replaces it with \r\n
-            print(serialData)
-            serialData = serialData.replace(b'\xdb\xdc', b'\r\n')
-            serialData = serialData.decode('iso-8859-1')
-            cmd = serialData.rstrip('\r\n')
-            #command has parameters
-            if '=' in cmd: # can have a = in the params. need to fix that
-                cmd, params = serialData.split('=', 1)
-                func = self.command(cmd)
-                func(params)
-            else:
-                #select function based on AT command
-                func = self.command(cmd)
-                func()
 
 
-    #save html data from BM
-    def save_data(self, data):
-        #remove unwanted data
-        data = data.replace('1,0,0,0,', '')
-        #save html data to string
-        self.htmlData += data
-        self.sendToSerial(b'OK\r\n')
 
-    #parse saved data when we get a close socket
-    def close_socket(self, params):
-        #parse list can we use html parser?
-        #another command has caused a close socket
-        if self.htmlData:
-            print(self.htmlData)
-            #send html to the ui
-            jsonData = json.dumps(bmpi)
-            self.sendToLogQueue(jsonData)
-            self.htmlData = None  
-        self.sendToSerial(b'OK\r\n')
+
+
+
+
+
+
+
+
+
+
 
 
     #TODO clean up the list > dict > json.

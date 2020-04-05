@@ -22,10 +22,10 @@ border-collapse: collapse;
 .button{
     background: url("/button.bmp") no-repeat;
     background-size: cover;
+    font-size: 0px;
     display: block;
     cursor:pointer;
     border: none;
-
     height: 90px;
     width: 90px;
 
@@ -46,14 +46,15 @@ iframe{
 
 }
 
-div{
-    
+#container{
     border: 0;
     padding: none;
     display: block;
     margin: none;
     border-style: solid;
     border-color: #d11414;
+    width: 350px; 
+    height: 270px;
 
   }
 

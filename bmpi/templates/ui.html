@@ -3,7 +3,7 @@
 <head>
     <title>BMPi</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-    <script type=text/javascript src="{{url_for('static', filename='jquery-3.4.1.min.js') }}"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 </head>
     <body>
         <div><a href="/terminal">Terminal</a></div>
@@ -13,8 +13,7 @@
             <tbody>
                 <tr>
                     <td class='iframe-td'>
-                        <div>
-                        <iframe id="container"></iframe>
+                        <div id="container">
                         </div>
                     </td>
                 </tr>
@@ -24,30 +23,52 @@
             <tbody class="table-body">
                 <tr>
                     <td class="button-td">
-                        <input type="buton" class="button" name="button" value="/bm.txt?k=1" onclick=""/>
+                        <input type="buton" class="button" value="/bm.txt?k=1"/>
                     </td>
                     <td class="button-td">
-                        <input type="buton" class="button" name="button" id=click value="/bm.txt?k=2"/>
-                        </td>
+                        <input type="buton" class="button" value="/bm.txt?k=2"/>
+                    </td>
                     </td>
                     <td class="button-td">
-                        <input type="buton" class="button" name="button" id=click value="/bm.txt?k=3"/>
+                        <input type="buton" class="button" value="/bm.txt?k=3"/>
                     </td>
                     <td class="button-td">
-                        <input type="buton" class="button" name="button" value="/bm.txt?k=4"/>
+                        <input type="buton" class="button" value="/bm.txt?k=4"/>
                     </td>
                 </tr>
             </tbody>
         </table>
         <script>
             $(document).ready( function() {
-                $('#click').click(function() {
-                    console.log("boom")
-                   $.ajax("{{ url_for('ui.ui') }}").done(function (reply) {
+                $('.button').click(function(event) {
+                    event.stopPropagation();
+                    event.stopImmediatePropagation();
+                    var val = $(this).val();
+                   $.ajax({
+                        type : 'POST',
+                        url: '/keypress',
+                        contentType: 'application/json',
+                        data : JSON.stringify(val)
+                        }).done(function (reply) {
+                        console.log(reply)
                       $('#container').html(reply);
                    });
                 });
             });
+
+
+            $(document).ready( function() {
+                var targetContainer = document.getElementById("container");
+                const eventSource = new EventSource("/stream");
+                eventSource.onmessage = function(e) {
+                    console.log(e.data)
+                    targetContainer.innerHTML = e.data;
+                };
+                eventSource.onerror = function(err) {
+                    console.error("EventSource failed:", err);
+                };    
+            });
+
         </script>
     </body>
 </html>
