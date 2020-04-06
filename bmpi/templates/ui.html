@@ -50,24 +50,22 @@
                         contentType: 'application/json',
                         data : JSON.stringify(val)
                         }).done(function (reply) {
-                        console.log(reply)
-                      $('#container').html(reply);
+
                    });
                 });
             });
 
 
-            $(document).ready( function() {
-                var targetContainer = document.getElementById("container");
-                const eventSource = new EventSource("/stream");
-                eventSource.onmessage = function(e) {
-                    console.log(e.data)
-                    targetContainer.innerHTML = e.data;
-                };
-                eventSource.onerror = function(err) {
-                    console.error("EventSource failed:", err);
-                };    
-            });
+            var targetContainer = document.getElementById("container");
+            const eventSource = new EventSource("/stream");
+            eventSource.onmessage = function(e) {
+                console.log(e.data)
+                targetContainer.innerHTML = e.data;
+            };
+            eventSource.onerror = function(err) {
+                console.error("EventSource failed:", err);
+            };    
+
 
         </script>
     </body>

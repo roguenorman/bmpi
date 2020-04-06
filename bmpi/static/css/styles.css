@@ -12,7 +12,7 @@ border-collapse: collapse;
 
 /* buttons */
 .table-buttons{
-    width: 392px;
+    width: 300px;
     background: #333333;
     border-width: 0px;
     border-style: solid;
@@ -26,8 +26,8 @@ border-collapse: collapse;
     display: block;
     cursor:pointer;
     border: none;
-    height: 90px;
-    width: 90px;
+    height: 86px;
+    width: 86px;
 
 
 
@@ -53,8 +53,8 @@ iframe{
     margin: none;
     border-style: solid;
     border-color: #d11414;
-    width: 350px; 
-    height: 270px;
+    width: 320px; 
+    height: 240px;
 
   }
 

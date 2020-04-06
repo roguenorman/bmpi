@@ -16,16 +16,17 @@ def checkQueue():
     while True:
         if not app.wifi_srv.log_input_queue.empty():
             payload = app.wifi_srv.log_input_queue.get()
-            payload = "data: "+payload+"\n\n"
-            print("ui payload is : " + payload)
+            payload = 'data: '+payload+'\n\n'
+            print(payload)
             yield payload
 
 @ui_bp.route('/stream')
 def stream():
-    newresponse = Response(stream_with_context(checkQueue()), mimetype="text/event-stream")
-    newresponse.headers.add('Access-Control-Allow-Origin', '*')
-    newresponse.headers.add('Content-Type', 'text/event-stream')
-    return newresponse
+    response = Response(stream_with_context(checkQueue()), mimetype="text/event-stream")
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Cache-Control', 'no-cache')
+    response.headers.add('Content-Type', 'text/event-stream')
+    return response
 
 @ui_bp.route('/ui', methods=['GET', 'POST'])
 def ui():
@@ -35,28 +36,10 @@ def ui():
 
 @ui_bp.route('/keypress', methods=["GET","POST"])
 def test():
-    #print(request.json)
     app.wifi_srv.send_data(request.json)
-    return("nothing")
+    #refresh ui
+    app.wifi_srv.send_data("/bm.html")
+    return render_template('ui.html')
 
 
-
-#TODO research buttons so we dont need them in a form and need to post the form and hande redirects etc
-#@ui_bp.route('/ui', methods=['GET', 'POST'])
-#def ui():
-#    if request.method == 'POST':
-#        print('key is: ' + request.form.getlist("key")[0])
-#        if request.form.getlist("key")[0] == 'OK':
-#            app.wifi_srv.sendToSerial(b'OK\r\n')
-#            print('OK')
-#            return render_template('ui.html', title='UI')
-#        app.wifi_srv.requestUri = request.form.getlist("key")[0]
-#        sendCommand(request.form.getlist("key")[0])
-#        print('POST')
-#        return redirect(url_for('.ui'))
-#        #return render_template('ui.html', title='UI')
-#    else:
-#            return render_template('ui.html')
-            
-#background process happening without any refreshing
 

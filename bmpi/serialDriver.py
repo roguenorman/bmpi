@@ -26,7 +26,6 @@ class SerialThread(threading.Thread):
         self.sp.write(data)
         
     def readSerial(self):
-        #return self.sp.readline().replace("\n", "")
         return self.sp.readline()
  
     def run(self):
@@ -34,7 +33,8 @@ class SerialThread(threading.Thread):
         if self.sp:
             print("serial port already open, closing..")
             self.sp.close()
-        self.sp = serial.Serial(SERIAL_PORT, 115200, parity='N', stopbits=1, bytesize=8, rtscts=0, dsrdtr=0)
+        #self.sp = serial.Serial(SERIAL_PORT, 115200, parity='N', stopbits=1, bytesize=8, rtscts=0, dsrdtr=0)
+        self.sp = serial.Serial(SERIAL_PORT, 115200, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE, bytesize=8, rtscts=0, dsrdtr=0)
         self.sp.flushInput()
         self.sp.flushOutput()
         while not self.stop_event.is_set():

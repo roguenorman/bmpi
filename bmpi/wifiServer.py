@@ -39,9 +39,15 @@ class wifiServer():
             print('no output yet')
         else:
             #takes bytes with escapebytes and replaces it with \r\n
+            serialD = serialData.replace(b'\xdb\xdc', b'\r\n')
+            serialD = serialData.replace(b'\xdb', b'\r')
+            serialD = serialData.decode('latin-1').encode('utf-8')
+            print(serialD)
             serialData = serialData.replace(b'\xdb\xdc', b'\r\n')
-            serialData = serialData.decode('iso-8859-1')
+            serialData = serialData.decode('latin-1')
+
             cmd = serialData.rstrip('\r\n')
+            print('recv from BM: ' + serialData)
             #'switch' case for what command we need to send to BM 
             if '=' in cmd: # can have a = in the params. need to fix that
                 cmd, params = serialData.split('=', 1)
@@ -87,6 +93,7 @@ class wifiServer():
     def close_socket(self, params):
         if self.htmlData:
             #parse headers
+            val = ""
             headers, body = self.htmlData.split('\r\n\r\n', 1)
             code, headers = headers.split('\r\n', 1) 
             headers = headers.encode()
@@ -101,13 +108,11 @@ class wifiServer():
 
 
     #sends json data to log queue
-    #TODO make is json??
     def sendToLogQueue(self, data):
         #remove newline and tab
         data = data.replace('\r\n', '')
-        data = data.replace('\t', '')
-        jsonData = json.dumps(data)
-        self.log_input_queue.put(jsonData)
+        #data = data.replace('\t', '')
+        self.log_input_queue.put(data)
 
     ##functions to setup the wifi of the bmpi
     #192.168.11.140: \xc0\xa8\x01\x8c
@@ -206,6 +211,7 @@ class wifiServer():
         self.sendToSerial(value)        
 
     def sendToSerial(self, payload):
+        print(b'send to BM: ' + payload)
         self.serial_input_queue.put(payload)
 
 
