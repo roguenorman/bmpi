@@ -17,7 +17,7 @@ def checkQueue():
         if not app.wifi_srv.log_input_queue.empty():
             payload = app.wifi_srv.log_input_queue.get()
             payload = 'data: '+payload+'\n\n'
-            print(payload)
+            #print(payload)
             yield payload
 
 @ui_bp.route('/stream')

@@ -3,14 +3,16 @@ import socket
 import struct
 import time
 import json
-import threading
+#import threading
 from email.parser import BytesParser
-from queue import Queue, Empty
+#from queue import Queue, Empty
 from bmpi import serialDriver, htmlParse
 from flask import request
 import chardet
 import io
 from io import StringIO
+from multiporcessing import Process, Pipe
+
 
 debug = True
 interface = "wlan0"
@@ -18,17 +20,19 @@ interface = "wlan0"
 class wifiServer():
  
     def __init__(self):
-        self.serial_input_queue = Queue()
-        self.serial_output_queue = Queue()
-
-        self.log_input_queue = Queue()
+        #self.serial_input_queue = Queue()
+        #self.serial_output_queue = Queue()
+        self.output_p, self.input_p = Pipe()
+        
+        #self.log_input_queue = Queue()
         self.htmlData = ""
         self.requestUri = str()
         self.recipeCount = int()
 
-        self.serial_bg = serialDriver.SerialThread(self, self.serial_input_queue, self.serial_output_queue)
-        self.serial_bg.daemon = True
-        self.serial_bg.start()
+        #self.serial_bg = serialDriver.SerialThread(self, self.serial_input_queue, self.serial_output_queue)
+        #self.serial_bg.daemon = True
+        #self.serial_bg.start()
+        self.Process(target=serialDriver2.SerialProcess, args=((self, self.input_p, self.output_p),)).start()
         self.ipaddr =  self.getIp()
         self.parser = htmlParse.parser()
 

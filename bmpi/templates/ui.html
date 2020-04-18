@@ -55,7 +55,6 @@
                 });
             });
 
-
             var targetContainer = document.getElementById("container");
             const eventSource = new EventSource("/stream");
             eventSource.onmessage = function(e) {

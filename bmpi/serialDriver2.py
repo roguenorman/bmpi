@@ -2,22 +2,24 @@
 import io
 import serial
 import queue
-import threading
+from multiprocessing import Process, Pool
 from bmpi import wifiServer
 from time import time
 
 ## Change this to match your local settings
 SERIAL_PORT = '/dev/ttyAMA0'
 
-class SerialThread(threading.Thread):
+class SerialProcess(Process):
  
-    def __init__(self, wifiServer, serial_input_queue, serial_output_queue):
+    def __init__(self, wifiServer, input_p, output_p):
         threading.Thread.__init__(self)
-        self.serial_input_queue = serial_input_queue
-        self.serial_output_queue = serial_output_queue
+        #self.serial_input_queue = serial_input_queue
+        #self.serial_output_queue = serial_output_queue
+        self.wifiServer = wifiServer
+        self.input_p = input_p 
+        self.output_p = output_p 
         self.sp = None        
         self.stop_event = threading.Event()
-        self.wifiServer = wifiServer
  
     def close(self):
         self.sp.close()
@@ -50,7 +52,7 @@ class SerialThread(threading.Thread):
                     if (self.sp.inWaiting() > 0):
                         data = self.readSerial()
                         # send it back to flask
-                        self.serial_output_queue.put(data)
+                        self.input_p.send(data)
                         #self.wifiServer.receiveFromSerial()
                 except (IOError, OSError, serial.SerialException) as e:
                     if self.sp:
