@@ -18,47 +18,52 @@ interface = "wlan0"
 class wifiServer():
  
     def __init__(self):
-        self.serial_input_queue = Queue()
-        self.serial_output_queue = Queue()
+        threading.Thread.__init__(self)
+        self.i_queue = Queue()
+        self.o_queue = Queue()
 
         self.log_input_queue = Queue()
         self.htmlData = ""
         self.requestUri = str()
         self.recipeCount = int()
 
-        self.serial_bg = serialDriver.SerialThread(self, self.serial_input_queue, self.serial_output_queue)
+        self.serial_bg = serialDriver.SerialThread(self, self.i_queue, self.o_queue)
         self.serial_bg.daemon = True
         self.serial_bg.start()
         self.ipaddr =  self.getIp()
         self.parser = htmlParse.parser()
+        
+        self.wifi_bg = threading.Thread(target=self.receiveFromSerial, args=(self.i_queue, self.o_queue))
+        self.wifi_bg.daemon = True
+        self.wifi_bg.start()
 
         #self.t = threading.Timer(10.0, self.pollStatus)
         #self.t.start()
 
     
     #read line from serial queue as bytes
-    def receiveFromSerial(self):
-        try:  serialData = self.serial_output_queue.get_nowait()
-        except Empty:
-            print('no output yet')
-        else:
-            #takes bytes with escapebytes and replaces it with \r\n
-            serialData = serialData.replace(b'\xdb\xdc', b'\r\n')
-            serialData = serialData.decode('ISO-8859-1')
-            cmd = serialData.rstrip('\r\n')
-            #self.parser.feed(serialData)
-            #print(serialData)
-            #print('recv from BM: ' + serialData)
-
-            #'switch' case for what command we need to send to BM 
-            if '=' in cmd: # can have a = in the params. need to fix that
-                cmd, params = serialData.split('=', 1)
-                func = self.command(cmd)
-                func(params)
-            else:
-                #select function based on AT command
-                func = self.command(cmd)
-                func()
+    def receiveFromSerial(self, i_queue, o_queue):
+        while True:
+            try:  
+                #serialData = self.o_queue.get_nowait()
+                serialData = self.o_queue.get()
+                print(serialData)
+                serialData = serialData.replace(b'\xdb\xdc', b'\r\n')
+                serialData = serialData.decode('ISO-8859-1')
+                cmd = serialData.rstrip('\r\n')
+                #print('output received')
+                #'switch' case for what command we need to send to BM 
+                if '=' in cmd: # can have a = in the params. need to fix that
+                    cmd, params = serialData.split('=', 1)
+                    func = self.command(cmd)
+                    func(params)
+                    #self.sendToSerial(b'OK\r\n')
+                else:
+                    #select function based on AT command
+                    func = self.command(cmd)
+                    func()
+            except Empty:
+                continue
 
 
     #TODO receive params and send them to the functions too
@@ -222,94 +227,10 @@ class wifiServer():
         self.sendToSerial(value)        
 
     def sendToSerial(self, payload):
-        #print(b'send to BM: ' + payload)
-        self.serial_input_queue.put(payload)
+        print(b'send to BM: ' + payload)
+        self.i_queue.put(payload)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    #TODO clean up the list > dict > json.
-    #TODO do we need the if /bmtxt? we should be able to just receeive anything and depending on the AT command, parse it properly. when the stream is finished, it will close. fill up a list and when we get close, parse the list
-    def parse_response(self, serialData):
-        if "/bm.txt?" in self.requestUri and 'at+rsi_snd' in serialData:
-            bmpi = {}
-            print('parsing: ' + serialData)
-            headers, body = serialData.split('\r\n\r\n', 1)
-            versionDate, serialNum, state = body.split(';', 2)
-            version,month,day,year = versionDate.split(" ")
-            request_line, headers_alone = headers.split('\r\n', 1) #request_line will have 200OK
-            #encode to bytes so we can parse the headers_alone
-            headers_alone = headers_alone.encode()
-            headers = BytesParser().parsebytes(headers_alone)
-
-            bmpi['ipaddr'] = self.ipaddr
-            bmpi['version'] = version
-            bmpi["date"] = (day + " " + month + " " + year)
-            bmpi['serialnum'] = serialNum
-            items = state.split("X")
-            bmpi["clock"] = items[1]
-            bmpi["unit"] = items[2]
-            bmpi["unknown"] = items[3]
-            bmpi["target_temp"] = items[4]
-            bmpi["actual_temp"] = items[5]
-            bmpi["target_time"] = items[6]
-            bmpi["elapsed_time"] = items[7] 
-            jsonData = json.dumps(bmpi)
-            #print(jsonData)
-            self.sendToLogQueue(jsonData)
-            #clean up
-            self.requestUri = ""
-        #recipe url. This will come in 2 seperate responses from the BM
-        elif "/rz.txt" in self.requestUri and 'at+rsi_snd' in serialData:
-            #http list is empty so it must be the first response from BM
-            if not self.http_list:
-                print("1st response for rz")
-                headers, body = serialData.split('\r\n\r\n', 1)
-                versionDate, serialNum, self.recipeCount = body.split(';') 
-                self.http_list.extend((headers, versionDate, serialNum))
-                request_line, headers_alone = self.http_list[0].split('\r\n', 1) #request_line will have 200OK
-                #encode to bytes so we can parse the headers_alone
-                headers_alone = headers_alone.encode()
-                headers = BytesParser().parsebytes(headers_alone)
-
-            #first response has been added to list
-            else:
-                bmpi = {}
-                print("2nd response for rz")
-                recipes = serialData.split('\r\n', int(self.recipeCount))
-                #remove at+rsi_snd=1,0,0,0
-                recipes = recipes[1:]
-                self.http_list.append(recipes)
-                bmpi['version'] = self.http_list[1]
-                bmpi['serialnum'] = self.http_list[2]
-                bmpi['rz'] = self.http_list[3]
-                jsonData = json.dumps(bmpi)
-                self.sendToLogQueue(jsonData)
-                #clean up
-                self.requestUri = ""
-                self.recipeCount = None
-                self.http_list.clear()
-        #AT command
-
-        #TODO fix this with the new function format
-        else:
-            #remove EOL characters
-            serialData.rstrip()
-            data = {"at_command": serialData}
-            jsonData = json.dumps(data)
-            #self.sendToLogQueue(jsonData)
 
 
 

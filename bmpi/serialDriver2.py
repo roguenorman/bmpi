@@ -11,13 +11,13 @@ SERIAL_PORT = '/dev/ttyAMA0'
 
 class SerialProcess(Process):
  
-    def __init__(self, wifiServer, input_p, output_p):
+    def __init__(self, wifiServer, child_p):
         threading.Thread.__init__(self)
         #self.serial_input_queue = serial_input_queue
         #self.serial_output_queue = serial_output_queue
         self.wifiServer = wifiServer
-        self.input_p = input_p 
-        self.output_p = output_p 
+        self.child_p = child_p 
+        #self.parent_p = parent_p 
         self.sp = None        
         self.stop_event = threading.Event()
  

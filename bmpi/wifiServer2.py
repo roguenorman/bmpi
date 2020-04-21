@@ -22,7 +22,7 @@ class wifiServer():
     def __init__(self):
         #self.serial_input_queue = Queue()
         #self.serial_output_queue = Queue()
-        self.output_p, self.input_p = Pipe()
+        self.parent_p, self.child_p = Pipe()
         
         #self.log_input_queue = Queue()
         self.htmlData = ""
@@ -32,7 +32,7 @@ class wifiServer():
         #self.serial_bg = serialDriver.SerialThread(self, self.serial_input_queue, self.serial_output_queue)
         #self.serial_bg.daemon = True
         #self.serial_bg.start()
-        self.Process(target=serialDriver2.SerialProcess, args=((self, self.input_p, self.output_p),)).start()
+        self.Process(target=serialDriver2.SerialProcess, args=((self, self.child_p),)).start()
         self.ipaddr =  self.getIp()
         self.parser = htmlParse.parser()
 
@@ -42,17 +42,16 @@ class wifiServer():
     
     #read line from serial queue as bytes
     def receiveFromSerial(self):
-        try:  serialData = self.serial_output_queue.get_nowait()
-        except Empty:
+        while True:
+            if parent_p.poll():
+        try:  serialData = self.parent_p.recv()
+
             print('no output yet')
         else:
             #takes bytes with escapebytes and replaces it with \r\n
             serialData = serialData.replace(b'\xdb\xdc', b'\r\n')
             serialData = serialData.decode('ISO-8859-1')
             cmd = serialData.rstrip('\r\n')
-            #self.parser.feed(serialData)
-            #print(serialData)
-            #print('recv from BM: ' + serialData)
 
             #'switch' case for what command we need to send to BM 
             if '=' in cmd: # can have a = in the params. need to fix that
@@ -227,7 +226,7 @@ class wifiServer():
 
     def sendToSerial(self, payload):
         #print(b'send to BM: ' + payload)
-        self.serial_input_queue.put(payload)
+        self.parent_p.send(payload)
 
 
 
